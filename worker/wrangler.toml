@@ -1,0 +1,26 @@
+name = "loquipapa-publicador"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+GRAPH_VERSION = "v26.0"
+TIKTOK_PRIVACY = "SELF_ONLY"
+# Dirección pública de este Worker, sin barra final. Complétala después del primer despliegue.
+PUBLIC_URL = ""
+
+[[d1_databases]]
+binding = "DB"
+database_name = "loquipapa"
+database_id = "PEGA_AQUI_EL_ID_DE_D1"
+
+[[kv_namespaces]]
+binding = "MEDIA_KV"
+id = "PEGA_AQUI_EL_ID_DE_KV"
+
+# Opcional: usar R2 en vez de KV para archivos de más de 25 MB.
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "loquipapa-media"

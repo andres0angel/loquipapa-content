@@ -1,0 +1,11 @@
+{
+  "name": "loquipapa-publicador",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db": "wrangler d1 execute loquipapa --remote --file=schema.sql"
+  },
+  "devDependencies": { "wrangler": "^4" }
+}
