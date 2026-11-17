@@ -1,93 +1,82 @@
 # LOQUIPAPAS · generador y publicador de contenido
 
-Dos piezas que trabajan juntas:
-
-| Parte | Qué hace | Dónde corre | Costo |
+| Parte | Qué hace | Dónde está | Costo |
 |---|---|---|---|
-| `index.html` | Crea reels, posts, carruseles, historias, guiones e ideas con la identidad de Loquipapas. Lleva el calendario. | En el navegador (Chrome de escritorio) | Gratis |
-| `worker/` | Guarda los archivos, los programa y los publica en Instagram, Facebook y TikTok a la hora elegida. | Cloudflare Workers | Plan gratuito |
+| `index.html` | Crea reels, posts, carruseles, historias, guiones e ideas con la identidad de Loquipapas. Lleva el calendario. | https://andres0angel.github.io/loquipapa-content/ | Gratis (GitHub Pages) |
+| `worker/` | Guarda los archivos, los programa y los publica en Instagram, Facebook y TikTok. Da textos e imágenes con IA gratuita. | https://loquipapas-publicador.loquipapas.workers.dev | Gratis (Cloudflare, plan Free) |
 
-El generador funciona solo: se puede abrir con doble clic y descargar las piezas sin instalar nada. El publicador es opcional y solo hace falta para programar publicaciones automáticas.
+No hay pagos mensuales. Todo corre dentro de los cupos gratuitos de GitHub y Cloudflare.
 
-## 1. Poner el generador en internet (GitHub Pages)
+## Estado actual
 
-1. En GitHub abre este repositorio → **Settings** → **Pages**.
-2. En **Source** elige **Deploy from a branch**, rama `main`, carpeta `/ (root)`, y guarda.
-3. En uno o dos minutos queda en `https://andres0angel.github.io/loquipapa-content/`.
+- **Funcionando:** la app publicada, el servidor desplegado, la base de datos (D1 `loquipapas`), el almacén de archivos (KV `loquipapas-media`) y la tarea que revisa cada 5 minutos qué toca publicar.
+- **Despliegue automático:** cada cambio en la rama `main` actualiza la app y el servidor sin hacer nada más.
+- **Pendiente:** conectar Instagram, Facebook y TikTok (sección 2). Hasta entonces las publicaciones programadas quedan guardadas y se marcan "Esta red no está conectada".
 
-## 2. Crear el servidor de publicación (Cloudflare)
+## 1. Uso diario
 
-Necesitas una cuenta gratuita de Cloudflare y Node.js instalado.
+1. Abre la app y entra a **Conexiones**. La dirección del servidor ya viene escrita; escribe la clave de la app (`APP_TOKEN`) y pulsa **Probar conexión**.
+2. En **Crear** elige pieza, estilo, campaña, escena y producto. Ajusta los textos o pide sugerencias.
+3. **Descargar** baja el archivo. **Guardar en calendario** deja la idea con fecha. **Programar publicación** crea el archivo, lo sube y queda en cola.
+4. En **Calendario**, **Crear plan de 14 días** arma dos semanas de borradores y **Actualizar estado** trae el resultado de cada publicación.
 
-```bash
-cd worker
-npm install
-npx wrangler login
-
-# Base de datos y almacén de archivos
-npx wrangler d1 create loquipapas
-npx wrangler kv namespace create MEDIA_KV
-```
-
-Cada comando imprime un identificador. Pégalos en `worker/wrangler.toml`, en `database_id` y en el `id` de `kv_namespaces`. Luego:
-
-```bash
-npm run db                 # crea las tablas
-npx wrangler secret put APP_TOKEN   # inventa una clave larga; es la que escribes en la app
-npm run deploy
-```
-
-El despliegue muestra la dirección del servidor, parecida a `https://loquipapas-publicador.TU-USUARIO.workers.dev`. Cópiala en `PUBLIC_URL` dentro de `wrangler.toml` y ejecuta `npm run deploy` otra vez.
-
-En el generador abre **Conexiones**, escribe esa dirección y la clave, y pulsa **Probar conexión**.
-
-## 3. Conectar las redes
-
-Sin este paso el servidor guarda y programa, pero marca cada publicación con el error "Esta red no está conectada".
+## 2. Conectar las redes
 
 ### Instagram y Facebook
 
 1. Convierte la cuenta de Instagram en **profesional** y enlázala a la **página de Facebook** del negocio.
-2. En [developers.facebook.com](https://developers.facebook.com) crea una app de tipo negocio y añade los permisos `pages_manage_posts`, `pages_read_engagement`, `instagram_basic` e `instagram_content_publish`.
-3. Genera un token de usuario de larga duración y, con él, el **token de la página** (consulta `me/accounts`). El token de página obtenido así no vence.
+2. En [developers.facebook.com](https://developers.facebook.com) crea una app de tipo negocio con los permisos `pages_manage_posts`, `pages_read_engagement`, `instagram_basic` e `instagram_content_publish`.
+3. Genera un token de usuario de larga duración y, con él, el **token de la página** (consulta `me/accounts`).
 4. Anota el identificador de la página y el de la cuenta de Instagram (`{page-id}?fields=instagram_business_account`).
-
-```bash
-npx wrangler secret put META_PAGE_TOKEN
-npx wrangler secret put FB_PAGE_ID
-npx wrangler secret put IG_USER_ID
-```
+5. En Cloudflare → `loquipapas-publicador` → **Settings** → **Variables and secrets**, agrega como secretos: `META_PAGE_TOKEN`, `FB_PAGE_ID` e `IG_USER_ID`.
 
 ### TikTok
 
-1. En [developers.tiktok.com](https://developers.tiktok.com) crea una app con el producto **Content Posting API** y el permiso `video.publish`.
-2. Verifica en esa app el dominio de tu servidor (TikTok lo exige para descargar el video desde una dirección web).
-3. Autoriza tu cuenta y guarda los tokens en el servidor:
+1. En [developers.tiktok.com](https://developers.tiktok.com) crea una app con **Content Posting API** y el permiso `video.publish`.
+2. Verifica en esa app el dominio del servidor (TikTok lo exige para descargar el video desde una dirección web).
+3. Agrega en Cloudflare los secretos `TIKTOK_CLIENT_KEY` y `TIKTOK_CLIENT_SECRET`, autoriza tu cuenta y guarda los tokens:
 
 ```bash
-npx wrangler secret put TIKTOK_CLIENT_KEY
-npx wrangler secret put TIKTOK_CLIENT_SECRET
-curl -X POST https://TU-SERVIDOR/api/tiktok/token \
+curl -X POST https://loquipapas-publicador.loquipapas.workers.dev/api/tiktok/token \
   -H "Authorization: Bearer TU_CLAVE" -H "Content-Type: application/json" \
   -d '{"access_token":"...","refresh_token":"...","expires_in":86400}'
 ```
 
-Mientras TikTok no apruebe la app, los videos quedan **privados** en la cuenta (`TIKTOK_PRIVACY = "SELF_ONLY"`). Después de la aprobación cambia ese valor a `PUBLIC_TO_EVERYONE` en `wrangler.toml`.
+Mientras TikTok no apruebe la app, los videos quedan **privados** (`TIKTOK_PRIVACY = "SELF_ONLY"` en `worker/wrangler.toml`). Después de la aprobación cámbialo a `PUBLIC_TO_EVERYONE`.
 
 ### WhatsApp
 
 WhatsApp no ofrece una forma oficial de publicar estados automáticamente. El calendario genera un recordatorio para el calendario del celular y la pieza queda lista para subirla a mano.
 
+## 3. IA gratuita
+
+El servidor usa Workers AI de Cloudflare, que incluye un cupo diario sin costo:
+
+- **Sugerir con IA:** textos nuevos para el gancho, las líneas, el remate y el llamado.
+- **Crear foto con IA gratis:** una foto de comida para los posts e historias de estilo humanista.
+
+Si el cupo del día se agota, la app avisa y sigue funcionando con su banco propio de textos. Las fotos hechas con IA son inventadas: deben parecerse a lo que se vende y las redes piden marcarlas como contenido generado con IA.
+
 ## Cómo funciona por dentro
 
-- El generador dibuja cada pieza con código sobre un lienzo; no usa inteligencia artificial. Los videos se graban en el navegador en tiempo real.
-- Al programar, el generador sube el archivo al servidor (`POST /api/media`) y crea la publicación (`POST /api/posts`).
-- Cada 5 minutos el servidor revisa qué publicaciones ya llegaron a su hora y las envía a cada red. Instagram procesa los videos en dos pasos, así que un reel puede tardar hasta 10 minutos en aparecer.
+- El generador dibuja cada pieza con código sobre un lienzo. Los videos se graban en el navegador en tiempo real.
+- Al programar, la app sube el archivo (`POST /api/media`) y crea la publicación (`POST /api/posts`).
+- Cada 5 minutos el servidor envía a cada red lo que ya llegó a su hora. Instagram procesa los videos en dos pasos, así que un reel puede tardar hasta 10 minutos.
 - Los archivos se borran del servidor 3 días después de publicados.
+- El servidor crea sus tablas solo la primera vez y recuerda su dirección pública.
 
 ## Límites conocidos
 
-- Cada archivo puede pesar hasta 25 MB (límite de KV). Para archivos más grandes activa R2 en `wrangler.toml`.
+- Cada archivo puede pesar hasta 25 MB. Para más, activa R2 en `worker/wrangler.toml`.
 - Las redes exigen video en MP4. Chrome de escritorio actualizado lo graba así; si el navegador solo puede grabar en WebM, la app lo avisa y no lo sube.
-- La publicación en Instagram, Facebook y TikTok se probó contra un servicio simulado, no contra las redes reales. La primera publicación real conviene hacerla con una pieza de prueba.
+- La publicación de posts, carruseles, reels e historias se probó contra un servicio simulado de Meta y TikTok, no contra las redes reales. La primera publicación real conviene hacerla con una pieza de prueba.
+- Las historias se publican solo en Instagram. A TikTok solo van videos.
 - El calendario vive en el navegador donde se creó. Usa **Descargar copia** para respaldarlo.
+
+## Desarrollo local del servidor
+
+```bash
+cd worker
+npm install
+npx wrangler dev
+```

@@ -4,8 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db": "wrangler d1 execute loquipapas --remote --file=schema.sql"
+    "deploy": "wrangler deploy"
   },
   "devDependencies": { "wrangler": "^4" }
 }

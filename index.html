@@ -99,6 +99,18 @@ code{background:var(--noche);border:1px solid var(--linea);border-radius:6px;pad
         <option value="fecha">Fecha especial</option>
       </select></div>
     </div>
+    <div id="escenaBox">
+      <label for="escena">Escena del reel</label>
+      <select id="escena">
+        <option value="auto">Automática según la campaña</option>
+        <option value="comida">El plato se arma (antojo)</option>
+        <option value="loqui">Loqui habla</option>
+        <option value="versus">Esto contra aquello</option>
+        <option value="lista">Lista que suma</option>
+        <option value="pasos">Paso a paso</option>
+        <option value="resena">Cinco estrellas</option>
+      </select>
+    </div>
     <label for="producto">Producto protagonista</label>
     <select id="producto">
       <option>Salchipapa</option><option>Papas con queso</option><option>Perro</option><option>Perra</option><option>Hamburguesa</option>
@@ -107,6 +119,8 @@ code{background:var(--noche);border:1px solid var(--linea);border-radius:6px;pad
       <label for="foto">Tu foto o tu video</label>
       <input type="file" id="foto" accept="image/*,video/*">
       <p class="hint">Para el estilo humanista y para editar tu grabación. El archivo no sale de tu equipo.</p>
+      <div class="btns"><button class="sec" id="bFotoIA">Crear foto con IA gratis</button></div>
+      <p class="hint">Usa la IA gratuita de tu servidor. La foto es inventada: revisa que se parezca a lo que vendes antes de publicarla.</p>
     </div>
   </div>
 
@@ -301,7 +315,7 @@ const DR=[[300,120],[392,270],[484,170],[588,310],[684,140],[762,230]];
 const SPOTS=[[380,1010,'t'],[470,930,'s'],[560,1000,'t'],[650,940,'s'],[730,1040,'t'],[330,1090,'s'],[520,1080,'t'],[610,1060,'s'],[430,1040,'t'],[700,990,'t'],[770,1100,'s'],[480,1000,'t']];
 const ZZ=[[300,1060],[365,965],[440,1065],[512,955],[585,1065],[655,955],[728,1065],[790,985]];
 const CAP=new Path2D('M262 1160 C250 1020 330 900 430 880 C500 850 580 850 650 880 C750 900 830 1020 818 1160 Z');
-function food(t,k,bare){
+function food(t,k,bare,soloQueso){
  if(!bare){ctx.fillStyle=C.papa;ctx.fillRect(0,0,1080,1920);
  ctx.save();ctx.translate(540,1150);ctx.rotate(rad(t*14));ctx.fillStyle='#FFD04A';for(let i=0;i<16;i++){ctx.beginPath();ctx.moveTo(0,0);const a0=rad(i*22.5),a1=rad(i*22.5+11.25);ctx.lineTo(1700*Math.cos(a0),1700*Math.sin(a0));ctx.lineTo(1700*Math.cos(a1),1700*Math.sin(a1));ctx.fill()}ctx.restore()}
  let z=1;if(t>=k.cheese)z=1+.22*easeInOut(prog(t,k.cheese,2.6));if(t>=k.tops)z=1.22-.08*easeInOut(prog(t,k.tops,1.2));
@@ -327,9 +341,9 @@ function food(t,k,bare){
    DR.forEach(([x],i)=>{if(!hs[i])return;ctx.beginPath();ctx.roundRect(x-30,1140,60,hs[i],30);ctx.fillStyle=f;ctx.fill();if(!pass)ctx.stroke()})}
   ctx.globalAlpha=.9;DR.forEach(([x],i)=>{if(hs[i]>90)rrect(x-12,1180,9,hs[i]-80,4.5,'#fff')});ctx.globalAlpha=1}
  // toppings
- SPOTS.forEach(([x,y,kind],i)=>{const s=k.tops+i*.1;if(t<s)return;const p=prog(t,s,.26);let dy=-1500*(1-easeIn(p)),sc=1;if(p>=1){const q=t-(s+.26);sc=1+.25*Math.exp(-q*12)*Math.cos(q*30)}
+ SPOTS.forEach(([x,y,kind],i)=>{const s=k.tops+i*.1;if(t<s||soloQueso)return;const p=prog(t,s,.26);let dy=-1500*(1-easeIn(p)),sc=1;if(p>=1){const q=t-(s+.26);sc=1+.25*Math.exp(-q*12)*Math.cos(q*30)}
   ctx.save();ctx.translate(x,y+dy);ctx.scale(sc,sc);if(kind==='s'){ctx.beginPath();ctx.arc(0,0,36,0,7);ctx.fillStyle='#E8735A';ctx.fill();ctx.lineWidth=9;ctx.strokeStyle=C.noche;ctx.stroke();ctx.beginPath();ctx.arc(0,0,20,0,7);ctx.fillStyle='#F29A85';ctx.fill()}else{ctx.rotate(rad((i*37)%60-30));rrect(-26,-15,52,30,8,'#B8402A',C.noche,8)}ctx.restore()});
- const zp=easeInOut(prog(t,k.tops+1.25,.6));
+ const zp=soloQueso?0:easeInOut(prog(t,k.tops+1.25,.6));
  if(zp>0){const segs=[];let tot=0;for(let i=1;i<ZZ.length;i++){const d=Math.hypot(ZZ[i][0]-ZZ[i-1][0],ZZ[i][1]-ZZ[i-1][1]);segs.push(d);tot+=d}
   let left=tot*zp;ctx.beginPath();ctx.moveTo(ZZ[0][0],ZZ[0][1]);for(let i=1;i<ZZ.length&&left>0;i++){const d=segs[i-1],f=Math.min(1,left/d);ctx.lineTo(ZZ[i-1][0]+(ZZ[i][0]-ZZ[i-1][0])*f,ZZ[i-1][1]+(ZZ[i][1]-ZZ[i-1][1])*f);left-=d}
   ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=40;ctx.strokeStyle=C.noche;ctx.stroke();ctx.lineWidth=24;ctx.strokeStyle='#FF8FA3';ctx.stroke()}
@@ -338,6 +352,45 @@ function food(t,k,bare){
   if(h>0){rrect(478+wob,top,124,h,62,C.noche);rrect(489+wob,top,102,h,51,C.queso);if(h>80)rrect(506+wob,top+20,12,h-60,6,'rgba(255,255,255,.85)')}}
  ctx.restore();
 }
+
+/* ---------- Otros productos: hamburguesa y perro ---------- */
+function fondo(t,pal){ctx.fillStyle=pal?pal[0]:C.papa;ctx.fillRect(0,0,1080,1920);ctx.save();ctx.translate(540,1150);ctx.rotate(rad(t*14));ctx.fillStyle=pal?pal[1]:'#FFD04A';for(let i=0;i<16;i++){ctx.beginPath();ctx.moveTo(0,0);const a0=rad(i*22.5),a1=rad(i*22.5+11.25);ctx.lineTo(1700*Math.cos(a0),1700*Math.sin(a0));ctx.lineTo(1700*Math.cos(a1),1700*Math.sin(a1));ctx.fill()}ctx.restore()}
+function caer(t,s){if(t<s)return null;const p=prog(t,s,.34);if(p<1)return{dy:-1900*(1-easeIn(p)),sq:1};const q=t-(s+.34);return{dy:-40*Math.exp(-q*9)*Math.abs(Math.sin(q*16)),sq:1+.08*Math.exp(-q*10)*Math.cos(q*26)}}
+function capa(t,s,cy,fn){const c=caer(t,s);if(!c)return;ctx.save();ctx.translate(540,cy+c.dy);ctx.scale(1/c.sq,c.sq);ctx.translate(-540,-cy);fn();ctx.restore()}
+function marco(t,k,esc,fn){let z=1;if(t>=k.cheese)z=1+.14*easeInOut(prog(t,k.cheese,2.6));if(t>=k.tops)z-=.05*easeInOut(prog(t,k.tops,1.2));
+ ctx.save();ctx.translate(540,1400);ctx.scale(z,z);ctx.translate(-540,-1400);ctx.globalAlpha=.18;ctx.fillStyle=C.noche;ctx.beginPath();ctx.ellipse(540,1716,380,26,0,0,7);ctx.fill();ctx.globalAlpha=1;
+ ctx.translate(540,1700);ctx.scale(esc,esc);ctx.translate(-540,-1700);ctx.lineJoin='round';fn();ctx.restore()}
+function chorro(t,k,yEnd){if(t<k.cheese||t>=k.cheese+2.75)return;const y0=-900,sb=y0+easeIn(prog(t,k.cheese,.5))*(yEnd-y0);let top=y0;if(t>=k.cheese+2.2)top=y0+easeIn(prog(t,k.cheese+2.2,.5))*(yEnd-y0);const h=Math.max(0,sb-top),w=Math.sin(t*9)*5;
+ if(h>0){rrect(478+w,top,124,h,62,C.noche);rrect(489+w,top,102,h,51,C.queso);if(h>80)rrect(506+w,top+20,12,h-60,6,'rgba(255,255,255,.85)')}}
+function zig(pts,p,color){if(p<=0)return;const segs=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);segs.push(d);tot+=d}
+ let left=tot*p;ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length&&left>0;i++){const d=segs[i-1],f=Math.min(1,left/d);ctx.lineTo(pts[i-1][0]+(pts[i][0]-pts[i-1][0])*f,pts[i-1][1]+(pts[i][1]-pts[i-1][1])*f);left-=d}
+ ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=34;ctx.strokeStyle=C.noche;ctx.stroke();ctx.lineWidth=20;ctx.strokeStyle=color;ctx.stroke()}
+function burger(t,k){const f=k.fries,N=C.noche;marco(t,k,1.55,()=>{
+ capa(t,f,1645,()=>rrect(250,1590,580,110,45,'#E8A23D',N,12));
+ capa(t,f+.5,1545,()=>{rrect(232,1495,616,105,50,'#6B3A22',N,12);ctx.globalAlpha=.4;rrect(275,1514,280,14,7,'#B07355');ctx.globalAlpha=1});
+ capa(t,f+1,1478,()=>{const g=t>=k.cheese?easeOut(prog(t,k.cheese+.3,1.6)):0;ctx.beginPath();ctx.moveTo(238,1456);ctx.lineTo(842,1456);ctx.lineTo(842,1494);
+  [[790,50],[690,110],[600,44],[495,140],[395,62],[295,100]].forEach(([x,l])=>{const h=10+l*g;ctx.lineTo(x+36,1494);ctx.quadraticCurveTo(x+32,1494+h,x,1494+h+16);ctx.quadraticCurveTo(x-32,1494+h,x-36,1494)});
+  ctx.lineTo(238,1494);ctx.closePath();ctx.fillStyle=C.queso;ctx.fill();ctx.lineWidth=12;ctx.strokeStyle=N;ctx.stroke()});
+ chorro(t,k,1470);
+ capa(t,k.tops-.7,1440,()=>{ctx.beginPath();ctx.moveTo(226,1424);ctx.lineTo(854,1424);for(let x=854;x>226;x-=52)ctx.quadraticCurveTo(x-26,1492,x-52,1452);ctx.closePath();ctx.fillStyle='#7BC043';ctx.fill();ctx.lineWidth=12;ctx.strokeStyle=N;ctx.stroke()});
+ capa(t,k.tops-.35,1400,()=>rrect(262,1376,556,54,27,'#E2412B',N,12));
+ capa(t,k.tops+.1,1280,()=>{const p=new Path2D('M236 1392 C236 1140 844 1140 844 1392 Z');ctx.fillStyle='#F2B04A';ctx.fill(p);ctx.lineWidth=12;ctx.strokeStyle=N;ctx.stroke(p);
+  [[400,1260,-20],[500,1225,10],[610,1240,25],[700,1300,-10],[340,1320,15],[555,1310,-25]].forEach(([x,y,r])=>{ctx.save();ctx.translate(x,y);ctx.rotate(rad(r));ctx.beginPath();ctx.ellipse(0,0,16,8,0,0,7);ctx.fillStyle=C.crema;ctx.fill();ctx.lineWidth=5;ctx.stroke();ctx.restore()});
+  ctx.lineCap='round';ctx.lineWidth=12;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.stroke(new Path2D('M300 1300 C330 1230 400 1200 460 1192'))})})}
+const PD=[[260,60],[350,110],[450,52],[560,130],[660,70],[760,100]],PZ=[[230,1392],[300,1352],[370,1392],[440,1352],[510,1392],[580,1352],[650,1392],[720,1352],[790,1392],[850,1360]];
+function perro(t,k){const f=k.fries,N=C.noche;marco(t,k,1.3,()=>{
+ capa(t,f,1650,()=>{poly([[205,1600],[875,1600],[830,1700],[250,1700]],C.rojo,N,12);poly([[214,1618],[866,1618],[858,1640],[222,1640]],C.crema)});
+ capa(t,f+.4,1500,()=>rrect(190,1436,700,150,75,'#D98F2E',N,12));
+ capa(t,f+.8,1460,()=>{rrect(150,1398,780,120,60,'#C8553A',N,12);ctx.globalAlpha=.8;rrect(205,1418,400,14,7,'#EE9A84');ctx.globalAlpha=1});
+ capa(t,f+1.2,1560,()=>{rrect(180,1486,720,140,70,'#F2B04A',N,12);ctx.globalAlpha=.6;rrect(240,1508,300,14,7,'#FFE0A0');ctx.globalAlpha=1});
+ const g=t>=k.cheese?easeOut(prog(t,k.cheese+.45,1.3)):0;
+ if(g>0){const w=680*g,x0=540-w/2,hs=PD.map(([x,l],i)=>Math.abs(x-540)<w/2-20?40+l*easeOut(prog(t,k.cheese+1+i*.15,1.5)):0);
+  PD.forEach(([x],i)=>{if(hs[i])rrect(x-26,1410,52,hs[i],26,C.queso,N,12)});rrect(x0,1380,w,64,32,C.queso,N,12);PD.forEach(([x],i)=>{if(hs[i])rrect(x-20,1404,40,34,0,C.queso)});
+  ctx.globalAlpha=.85;if(w>300)rrect(540-w/2+50,1394,w*.35,10,5,'#fff');ctx.globalAlpha=1}
+ chorro(t,k,1400);
+ for(let i=0;i<12;i++){const c=caer(t,k.tops+i*.08);if(!c)continue;const x=250+i*52,y=1372+(i%3)*10;ctx.save();ctx.translate(x,y+c.dy);ctx.rotate(rad((i*47)%70-35));rrect(-22,-9,44,18,5,i%2?C.fry1:C.fry2,N,6);ctx.restore()}
+ zig(PZ,easeInOut(prog(t,k.tops+1.1,.6)),'#FF8FA3')})}
+function plato(t,k,bare,tipo,pal){if(!bare)fondo(t,pal);if(tipo==='Hamburguesa')burger(t,k);else if(tipo==='Perro'||tipo==='Perra')perro(t,k);else food(t,k,true,tipo==='Papas con queso')}
 
 /* ---------- Plantillas de reel ---------- */
 function endCards(t,s,d){ // marca en s, llamado en s+2, fin s+3.5
@@ -360,12 +413,12 @@ function endCards(t,s,d){ // marca en s, llamado en s+2, fin s+3.5
 function hookCard(t,d){ctx.save();const sh=t>1&&t<1.7?Math.sin(t*60)*5:0;ctx.translate(sh,0);ctx.fillStyle=C.noche;ctx.fillRect(-10,0,1100,1920);
  const L=d.hookLines.slice(0,3),hs=fitSize(L,'Luckiest Guy',230,960);L.forEach((l,i)=>{const sc=slam(t,i*.5);if(sc)words({lines:[l],top:330+i*hs*1.08,size:hs,color:i===L.length-1&&L.length>1?C.papa:C.crema,shadow:C.rojo,scale:sc,rot:[-3,2,-2][i]})});
  const pk=easeOut(prog(t,1,.35));if(pk>0)loqui(540,1920+756-pk*520,660);ctx.restore()}
-function reelAntojo(d){const k={fries:2,cheese:5,tops:8.5};
+function reelAntojo(d){const k={fries:2,cheese:5,tops:8.5},noche=d.campana==='fecha';
  const W=[[2,3.25,0],[3.25,5,1],[5,6,2],[6,7,3],[7,7.75,4],[7.75,8.5,5],[8.5,10.5,6]];
  return{w:1080,h:1920,dur:14,draw(t){
   if(t<2)hookCard(t,d);
-  if(t>=1.72&&t<10.6){ctx.save();if(t<2){ctx.beginPath();ctx.arc(540,1100,easeIn(prog(t,1.72,.28))*1300,0,7);ctx.clip()}food(t,k);
-   W.forEach(([a,b,i],n)=>{if(t>=a&&t<b&&d.lineas[i]){const p=prog(t,a,.14),sc=p<1?2.2-1.2*easeOut(p):1+.035*Math.sin((t-a)*13)*Math.exp(-(t-a)*4);const ls=wrap(d.lineas[i],10);words({lines:ls,top:150,size:ls.length>2?170:ls.length>1?230:260,color:C.rojo,shadow:C.noche,scale:sc,rot:n%2?2:-2})}});ctx.restore()}
+  if(t>=1.72&&t<10.6){ctx.save();if(t<2){ctx.beginPath();ctx.arc(540,1100,easeIn(prog(t,1.72,.28))*1300,0,7);ctx.clip()}plato(t,k,false,d.producto,noche?[C.noche,'#262036']:null);
+   W.forEach(([a,b,i],n)=>{if(t>=a&&t<b&&d.lineas[i]){const p=prog(t,a,.14),sc=p<1?2.2-1.2*easeOut(p):1+.035*Math.sin((t-a)*13)*Math.exp(-(t-a)*4);const ls=wrap(d.lineas[i],10);words({lines:ls,top:150,size:ls.length>2?170:ls.length>1?230:260,color:noche?C.papa:C.rojo,shadow:noche?C.rojo:C.noche,scale:sc,rot:n%2?2:-2})}});ctx.restore()}
   endCards(t,10.5,d);
   const fl=t>=10.42&&t<10.75?(t<10.5?prog(t,10.42,.08):1-prog(t,10.5,.25)):0;if(fl>0){ctx.globalAlpha=fl;ctx.fillStyle='#fff';ctx.fillRect(0,0,1080,1920);ctx.globalAlpha=1}}}}
 function reelLoqui(d){const beats=d.lineas.filter(Boolean).slice(0,8),B=1.3,s0=2,endS=s0+beats.length*B;
@@ -376,6 +429,45 @@ function reelLoqui(d){const beats=d.lineas.filter(Boolean).slice(0,8),B=1.3,s0=2
    const ls=wrap(beats[i],9),sc=slam(t,a)||1;words({lines:ls,top:220,size:ls.length>2?210:260,color:c,shadow:sh,scale:sc,rot:i%2?2:-2});
    const lp=prog(t,a,.4),ly=(1-back(lp))*700,side=i%2?1:-1;loqui(540+side*40,2010+ly,820,side*6+Math.sin((t-a)*9)*3,sh)}
   endCards(t,endS,d)}}}
+
+function reelVersus(d){const L=d.lineas.length>=2?d.lineas:['OPCIÓN A','OPCIÓN B'],lim=x=>x.replace(/[¿?]/g,'').replace(/^O /,''),A=wrapMax(lim(L[0]),9,3),B=wrapMax(lim(L[1]),9,3),rest=L.slice(2,6),s0=2,s1=s0+2.8,endS=s1+Math.max(1,rest.length)*1.2;
+ return{w:1080,h:1920,dur:endS+3.5,draw(t){
+  if(t<s0)hookCard(t,d);
+  if(t>=s0&&t<endS){const a=easeOut(prog(t,s0,.3)),b=easeOut(prog(t,s0+.5,.3));ctx.fillStyle=C.noche;ctx.fillRect(0,0,1080,1920);
+   ctx.save();ctx.translate(-1080*(1-a),0);ctx.fillStyle=C.rojo;ctx.fillRect(0,0,1080,960);words({lines:A,top:250,size:230,color:C.crema,shadow:C.noche,rot:-3});ctx.restore();
+   ctx.save();ctx.translate(1080*(1-b),0);ctx.fillStyle=C.papa;ctx.fillRect(0,960,1080,960);words({lines:B,top:1230,size:230,color:C.rojo,shadow:C.noche,rot:3});ctx.restore();
+   const sc=slam(t,s0+1);if(sc){ctx.save();ctx.translate(540,960);ctx.scale(sc,sc);ctx.rotate(rad(-6+Math.sin(t*6)*3));ctx.beginPath();ctx.arc(0,0,150,0,7);ctx.fillStyle=C.noche;ctx.fill();ctx.lineWidth=14;ctx.strokeStyle=C.crema;ctx.stroke();ctx.restore();words({lines:['VS'],top:876,size:170,color:C.papa,shadow:C.rojo,scale:sc})}
+   if(t>=s1&&rest.length){const i=Math.min(rest.length-1,Math.floor((t-s1)/1.2)),st=s1+i*1.2;ctx.globalAlpha=.84;ctx.fillStyle=C.noche;ctx.fillRect(0,0,1080,1920);ctx.globalAlpha=1;
+    words({lines:wrap(rest[i],10),top:480,size:230,color:i%2?C.papa:C.crema,shadow:C.rojo,scale:slam(t,st)||1,rot:i%2?2:-2});loqui(540,2020,760,Math.sin((t-st)*8)*4,C.rojo)}}
+  endCards(t,endS,d)}}}
+function reelLista(d){const L=d.lineas.slice(0,6),s0=2,endS=s0+L.length*.9+1.8;
+ return{w:1080,h:1920,dur:endS+3.5,draw(t){
+  if(t<s0)hookCard(t,d);
+  if(t>=s0&&t<endS){fondo(t);ctx.save();ctx.translate(540,1880);ctx.scale(.6,.6);ctx.translate(-540,-1716);plato(40,{fries:0,cheese:10,tops:20},true,d.producto);ctx.restore();
+   L.forEach((l,i)=>{const sc=slam(t,s0+i*.9);if(!sc)return;const y=140+i*150;ctx.save();ctx.translate(540,y+62);ctx.scale(sc,sc);ctx.rotate(rad(i%2?1.5:-1.5));rrect(-440,-62,880,124,36,i%2?C.crema:C.noche,C.noche,8);ctx.restore();
+    words({lines:['+ '+l],top:y+18,size:88,color:i%2?C.rojo:C.papa,scale:sc,maxW:800})});
+   const a=prog(t,s0+L.length*.9+.2,.25);if(a>0)words({lines:[d.remate],top:150+L.length*150+16,size:60,font:'Permanent Marker',color:C.noche,alpha:a,rot:-3,maxW:960})}
+  endCards(t,endS,d)}}}
+function reelPasos(d){const L=d.lineas.slice(0,7),B=1.25,s0=2,endS=s0+L.length*B,pal=[[C.crema,C.rojo,C.noche],[C.papa,C.rojo,C.noche],[C.rojo,C.crema,C.noche],[C.noche,C.papa,C.rojo]],kk={fries:0,cheese:L.length*B*.4,tops:L.length*B*.72};
+ return{w:1080,h:1920,dur:endS+3.5,draw(t){
+  if(t<s0)hookCard(t,d);
+  if(t>=s0&&t<endS){const i=Math.min(L.length-1,Math.floor((t-s0)/B)),st=s0+i*B,[bg,fg,sh]=pal[i%4];ctx.fillStyle=bg;ctx.fillRect(0,0,1080,1920);
+   words({lines:[String(i+1)],top:90,size:560,color:fg,alpha:.2,cx:230});
+   words({lines:wrap(L[i],10),top:430,size:230,color:fg,shadow:sh,scale:slam(t,st)||1,rot:i%2?2:-2});
+   ctx.save();ctx.translate(540,1810);ctx.scale(.58,.58);ctx.translate(-540,-1716);plato(t-s0,kk,true,d.producto);ctx.restore();
+   const w=900/L.length;for(let j=0;j<L.length;j++)rrect(90+j*w,1858,w-12,18,9,j<=i?fg:'rgba(128,128,128,.4)')}
+  endCards(t,endS,d)}}}
+function estrella(r,fill){ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;ctx[i?'lineTo':'moveTo'](rr*Math.cos(a),rr*Math.sin(a))}ctx.closePath();ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=10;ctx.lineJoin='round';ctx.strokeStyle=C.noche;ctx.stroke()}
+function reelResena(d){const L=d.lineas.slice(0,5),s0=2,s1=s0+1.4,endS=s1+L.length+1;
+ return{w:1080,h:1920,dur:endS+3.5,draw(t){
+  if(t<s0)hookCard(t,d);
+  if(t>=s0&&t<endS){ctx.fillStyle=C.crema;ctx.fillRect(0,0,1080,1920);
+   for(let i=0;i<5;i++){const sc=slam(t,s0+i*.2);if(sc){ctx.save();ctx.translate(180+i*180,290);ctx.scale(sc,sc);ctx.rotate(rad(Math.sin(t*5+i)*6));estrella(82,C.papa);ctx.restore()}}
+   L.forEach((l,i)=>{const sc=slam(t,s1+i),fin=i===L.length-1;if(sc)words({lines:[l],top:470+i*165,size:150,color:fin?C.rojo:C.noche,shadow:fin?C.noche:null,scale:sc,rot:i%2?1.5:-1.5})});
+   const lp=prog(t,s1,.45);if(lp>0)loqui(540,2090+(1-back(lp))*800,640,Math.sin(t*7)*4)}
+  endCards(t,endS,d)}}}
+const ESCENAS={comida:reelAntojo,loqui:reelLoqui,versus:reelVersus,lista:reelLista,pasos:reelPasos,resena:reelResena};
+const ESC_AUTO={antojo:'comida',loqui:'loqui',interaccion:'versus',combo:'lista',detras:'pasos',cliente:'resena',fecha:'comida'};
 
 /* ---------- Imágenes fijas ---------- */
 let media=null; // {type:'image'|'video', el}
@@ -402,7 +494,7 @@ function still(d,H){const W=1080,st=d.estilo,post=H<1400;return{w:W,h:H,dur:0,dr
   drip(50,200-r.size*.24,980,r.size*.55,C.crema);
   const rt=225+r.height;words({lines:[d.remate],top:rt,size:56,font:'Permanent Marker',color:C.noche,rot:-2,cx:W/2,maxW:940});
   const sc=Math.min(.74,(H-200-(rt+95))/1100);ctx.save();ctx.translate(W/2,H-190);ctx.scale(sc,sc);ctx.translate(-540,-1716);
-  food(40,{fries:0,cheese:10,tops:20},true);ctx.restore();
+  plato(40,{fries:0,cheese:10,tops:20},true,d.producto);ctx.restore();
   pill(H-170,d.cta,C.noche,C.crema,W)}
 }}}
 
@@ -467,7 +559,7 @@ async function generar(){await document.fonts.ready;const d=datos(),p=$('pieza')
  $('caption').textContent=caption(d);
  const esTexto=p==='guion'||p==='idea'||p==='promptia';slideIdx=0;$('slideNav').classList.toggle('oculto',p!=='carrusel');$('stageBox').classList.toggle('oculto',esTexto);$('texto').classList.toggle('oculto',!esTexto);
  if(esTexto){textoActual=p==='guion'?guion(d):p==='promptia'?promptIA(d):ideas(d);$('texto').textContent=textoActual;escena=null;$('bDescargar').disabled=false;$('bCopiar').disabled=false;estado('Texto listo.');return}
- if(p==='reel')escena=d.estilo==='loqui'||d.campana==='loqui'?reelLoqui(d):reelAntojo(d);
+ if(p==='reel'){const e=$('escena').value;escena=ESCENAS[e==='auto'?(d.estilo==='loqui'?'loqui':ESC_AUTO[d.campana]||'comida'):e](d)}
  else if(p==='edicion')escena=edicion(d);
  else if(p==='carrusel'){escena=carrusel(d);$('slideN').textContent=`1 de ${escena.slides.length}`}
  else escena=still(d,p==='post'?1350:1920);
@@ -507,18 +599,30 @@ async function descargar(){const p=$('pieza').value;
  finally{ocupado(false)}}
 
 /* ---------- Sugerencias ---------- */
-function sugerir(){const b=BANCO[$('campana').value];$('gancho').value=pick(b.ganchos);$('lineas').value=b.lineas.join('\n');$('remate').value=pick(b.remates);$('cta').value=pick(b.ctas);generar()}
-async function sugerirIA(){const url=$('iaUrl').value.trim().replace(/\/$/,''),key=$('iaClave').value.trim(),model=$('iaModelo').value.trim();
- if(!url||!model){estado('Para usar IA, completa la dirección del servicio y el modelo en "IA opcional".');document.querySelector('details').open=true;return}
- estado('Pidiendo textos a la IA…');const d=datos();
- const sys='Eres redactor publicitario de LOQUIPAPAS, comidas rápidas en Medellín (salchipapas, perros, perras, hamburguesas). Tono: atrevido, divertido, español neutro, sin groserías. Mascota: Loqui, una papa loca con pelo de papas fritas. No inventes precios, fechas ni promociones. Responde SOLO un JSON con: gancho (máx 5 palabras), lineas (5 a 7 frases de máx 3 palabras), remate (máx 7 palabras), cta (máx 6 palabras).';
- try{const r=await fetch(url+'/chat/completions',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},key?{Authorization:'Bearer '+key}:{}),body:JSON.stringify({model,temperature:1,messages:[{role:'system',content:sys},{role:'user',content:`Pieza: ${$('pieza').selectedOptions[0].text}. Estilo: ${$('estilo').selectedOptions[0].text}. Campaña: ${$('campana').selectedOptions[0].text}. Producto: ${d.producto}.`}]})});
-  if(!r.ok)throw new Error('El servicio respondió '+r.status);const j=await r.json();const txt=j.choices[0].message.content;const o=JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
-  $('gancho').value=String(o.gancho||'').toUpperCase();$('lineas').value=(o.lineas||[]).join('\n').toUpperCase();$('remate').value=o.remate||'';$('cta').value=String(o.cta||'').toUpperCase();
-  estado('Textos de la IA listos. Revísalos antes de publicar.');generar()}catch(e){estado('No se pudo usar la IA: '+e.message)}}
+const ARMADO={'Hamburguesa':['PAN.','CARNE.','QUESO.','MÁS QUESO.','¿MÁS?','OBVIO.','Y CERRAMOS CON TODO'],'Perro':['PAN.','SALCHICHA.','QUESO.','MÁS QUESO.','¿MÁS?','OBVIO.','Y LO QUE LE QUIERAS PONER'],'Perra':['PAN.','SALCHICHA.','QUESO.','MÁS QUESO.','¿MÁS?','OBVIO.','Y LO QUE LE QUIERAS PONER'],'Papas con queso':['PAPAS.','MUCHAS PAPAS.','QUESO.','MÁS QUESO.','¿MÁS?','OBVIO.','ASÍ. BAÑADAS.']};
+function sugerir(){const c=$('campana').value,b=BANCO[c];$('gancho').value=pick(b.ganchos);$('lineas').value=((c==='antojo'||c==='fecha')&&ARMADO[$('producto').value]||b.lineas).join('\n');$('remate').value=pick(b.remates);$('cta').value=pick(b.ctas);generar()}
+const SYS='Eres redactor publicitario de LOQUIPAPAS, comidas rápidas en Medellín (salchipapas, perros, perras, hamburguesas). Tono: atrevido, divertido, español neutro, sin groserías. Mascota: Loqui, una papa loca con pelo de papas fritas. No inventes precios, fechas ni promociones. Responde SOLO un JSON con: gancho (máx 5 palabras), lineas (lista de 5 a 7 frases de máx 3 palabras), remate (máx 7 palabras), cta (máx 6 palabras).';
+async function sugerirIA(){const url=$('iaUrl').value.trim().replace(/\/$/,''),key=$('iaClave').value.trim(),model=$('iaModelo').value.trim(),d=datos();
+ const pedido=`Pieza: ${$('pieza').selectedOptions[0].text}. Estilo: ${$('estilo').selectedOptions[0].text}. Campaña: ${$('campana').selectedOptions[0].text}. Producto: ${d.producto}. Idea de partida: ${d.gancho}.`;
+ if(!(url&&model)&&!srvBase()){estado('Conecta tu servidor en Conexiones o completa "IA opcional".');return}
+ estado('Pidiendo textos a la IA…');
+ try{let txt;
+  if(url&&model){const r=await fetch(url+'/chat/completions',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},key?{Authorization:'Bearer '+key}:{}),body:JSON.stringify({model,temperature:1,messages:[{role:'system',content:SYS},{role:'user',content:pedido}]})});
+   if(!r.ok)throw new Error('El servicio respondió '+r.status);txt=(await r.json()).choices[0].message.content}
+  else txt=(await srv('/api/ideas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sistema:SYS,pedido})})).texto;
+  const o=typeof txt==='object'?txt:JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
+  if(!o.gancho||!Array.isArray(o.lineas))throw new Error('la respuesta llegó incompleta');
+  $('gancho').value=String(o.gancho).toUpperCase();$('lineas').value=o.lineas.map(String).join('\n').toUpperCase();$('remate').value=String(o.remate||'');$('cta').value=String(o.cta||$('cta').value).toUpperCase();
+  estado('Textos de la IA listos. Revísalos antes de publicar.');generar()}catch(e){estado('No se pudo usar la IA: '+e.message+'. Puedes usar "Sugerir textos".')}}
+const FOTO={'Salchipapa':'loaded french fries topped with sliced fried sausages, melted yellow cheese and pink sauce, served in a red paper box','Papas con queso':'golden french fries covered with melted cheddar cheese sauce, served in a red paper box','Perro':'Colombian street-style hot dog with melted cheese, crushed potato chips and sauces','Perra':'Colombian street-style hot dog loaded with bacon, melted cheese, crushed potato chips and sauces','Hamburguesa':'juicy cheeseburger with melted cheese dripping, lettuce and tomato'};
+async function fotoIA(){if(!srvBase()){estado('Primero conecta tu servidor en la sección Conexiones.');return}
+ estado('Creando la foto con IA… tarda unos segundos.');$('bFotoIA').disabled=true;
+ try{const j=await srv('/api/imagen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({descripcion:`Close-up street food photography, ${FOTO[$('producto').value]||FOTO.Salchipapa}, steam rising, warm light, shallow depth of field, vivid appetizing colors, vertical composition with dark empty space at the bottom, no text, no logos, no people`})});
+  const im=new Image();im.onload=()=>{media={type:'image',el:im};generar();estado('Foto creada con IA. Revísala antes de publicar.')};im.onerror=()=>estado('La IA no devolvió una imagen válida.');im.src=j.imagen}
+ catch(e){estado('No se pudo crear la foto: '+e.message)}finally{$('bFotoIA').disabled=false}}
 
 /* ---------- Calendario (guardado en este navegador) ---------- */
-const CAMPOS=['pieza','estilo','campana','producto','gancho','lineas','remate','cta'];
+const CAMPOS=['pieza','estilo','campana','producto','escena','gancho','lineas','remate','cta'];
 const NOMBRE={reel:'Reel',post:'Post',carrusel:'Carrusel',historia:'Historia',edicion:'Video editado',guion:'Guion',promptia:'Video con IA',idea:'Ideas'};
 const TIPO_RED={reel:'reel',edicion:'reel',post:'image',carrusel:'carousel',historia:'story'};
 let cal=[];try{cal=JSON.parse(localStorage.getItem('lq_cal')||'[]')}catch(e){}
@@ -528,7 +632,7 @@ function fechaLocal(dt){const p=n=>String(n).padStart(2,'0');return `${dt.getFul
 function redesMarcadas(){return['ig','fb','tiktok','wa'].filter(r=>$('r'+r).checked)}
 function entradaActual(){const e={id:uid(),cuando:$('cuando').value,redes:redesMarcadas(),estado:'borrador',remoto:null,detalle:null};CAMPOS.forEach(c=>e[c]=$(c).value);e.caption=caption(datos());return e}
 function guardarEnCal(){if(!$('cuando').value){estado('Elige la fecha y la hora.');$('cuando').focus();return null}const e=entradaActual();cal.push(e);guardaCal();estado('Guardado en el calendario.');return e}
-function abrir(id){const e=cal.find(x=>x.id===id);if(!e)return;CAMPOS.forEach(c=>$(c).value=e[c]);$('cuando').value=e.cuando;['ig','fb','tiktok','wa'].forEach(r=>$('r'+r).checked=e.redes.includes(r));ver('vCrear');ajustaUI();generar()}
+function abrir(id){const e=cal.find(x=>x.id===id);if(!e)return;CAMPOS.forEach(c=>{if(e[c]!==undefined)$(c).value=e[c];else if(c==='escena')$(c).value='auto'});$('cuando').value=e.cuando;['ig','fb','tiktok','wa'].forEach(r=>$('r'+r).checked=e.redes.includes(r));ver('vCrear');ajustaUI();generar()}
 function ics(e){const d=new Date(e.cuando),f=x=>x.toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',fin=new Date(d.getTime()+9e5);
  const t=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Loquipapas//Generador//ES\r\nBEGIN:VEVENT\r\nUID:${e.id}@loquipapas\r\nDTSTAMP:${f(new Date())}\r\nDTSTART:${f(d)}\r\nDTEND:${f(fin)}\r\nSUMMARY:Subir estado de WhatsApp · Loquipapas\r\nDESCRIPTION:${(NOMBRE[e.pieza]+': '+e.gancho).replace(/[,;]/g,' ')}\r\nBEGIN:VALARM\r\nTRIGGER:PT0M\r\nACTION:DISPLAY\r\nDESCRIPTION:Subir estado de WhatsApp\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR`;
  baja(new Blob([t],{type:'text/calendar'}),'recordatorio-loquipapas.ics')}
@@ -550,7 +654,7 @@ function pintaCal(){const box=$('calLista');box.textContent='';const orden=cal.s
 const RITMO=[['historia','antojo','antojo'],['reel','antojo','antojo'],['historia','loqui','interaccion'],['carrusel','loqui','loqui'],['guion','humanista','detras'],['reel','antojo','fecha'],['post','humanista','cliente']];
 function plan(){const hoy=new Date();for(let i=1;i<=14;i++){const d=new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()+i),dia=d.getDay(),[pieza,estilo,campana]=RITMO[dia],b=BANCO[campana];
   d.setHours(dia===0||dia===6?12:18,30,0,0);
-  cal.push({id:uid(),cuando:fechaLocal(d),pieza,estilo,campana,producto:'Salchipapa',gancho:pick(b.ganchos),lineas:b.lineas.join('\n'),remate:pick(b.remates),cta:pick(b.ctas),redes:pieza==='reel'?['ig','fb','tiktok','wa']:pieza==='guion'?[]:['ig','fb','wa'],estado:'borrador',remoto:null,detalle:null})}
+  cal.push({id:uid(),cuando:fechaLocal(d),pieza,estilo,campana,escena:'auto',producto:pick(['Salchipapa','Papas con queso','Perro','Hamburguesa']),gancho:pick(b.ganchos),lineas:b.lineas.join('\n'),remate:pick(b.remates),cta:pick(b.ctas),redes:pieza==='reel'?['ig','fb','tiktok','wa']:pieza==='guion'?[]:['ig','fb','wa'],estado:'borrador',remoto:null,detalle:null})}
  guardaCal();$('calEstado').textContent='Plan creado: 14 piezas en borrador. Abre cada una, ajústala y prográmala.'}
 
 /* ---------- Servidor de publicación ---------- */
@@ -577,15 +681,15 @@ async function sincronizar(){const o=$('calEstado');try{const j=await srv('/api/
 function ver(id){['vCrear','vCal','vCon'].forEach(v=>$(v).classList.toggle('oculto',v!==id));document.querySelectorAll('nav button').forEach(b=>{const on=b.dataset.v===id;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'page':'false')});if(id==='vCal')pintaCal()}
 
 /* ---------- Eventos ---------- */
-function ajustaUI(){const p=$('pieza').value,e=$('estilo').value;$('fotoBox').classList.toggle('oculto',!(p==='edicion'||(e==='humanista'&&(p==='post'||p==='historia'))))}
+function ajustaUI(){const p=$('pieza').value,e=$('estilo').value;$('escenaBox').classList.toggle('oculto',p!=='reel');$('fotoBox').classList.toggle('oculto',!(p==='edicion'||(e==='humanista'&&(p==='post'||p==='historia'))))}
 $('foto').addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const url=URL.createObjectURL(f);
  if(f.type.startsWith('video')){const v=document.createElement('video');v.src=url;v.playsInline=true;v.muted=true;v.onloadeddata=()=>{media={type:'video',el:v};generar()};v.onerror=()=>estado('No se pudo abrir ese video.')}
  else{const im=new Image();im.onload=()=>{media={type:'image',el:im};generar()};im.onerror=()=>estado('No se pudo abrir esa imagen.');im.src=url}});
-['pieza','estilo','campana','producto'].forEach(id=>$(id).addEventListener('change',()=>{ajustaUI();if(id==='campana')sugerir();else generar()}));
+['pieza','estilo','campana','producto','escena'].forEach(id=>$(id).addEventListener('change',()=>{ajustaUI();if(id==='campana'||(id==='producto'&&['antojo','fecha'].includes($('campana').value)))sugerir();else generar()}));
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>ver(b.dataset.v));
 const mueve=n=>{if(!escena||!escena.slides)return;slideIdx=(slideIdx+n+escena.slides.length)%escena.slides.length;pinta(0);$('slideN').textContent=`${slideIdx+1} de ${escena.slides.length}`};
 $('bPrev').onclick=()=>mueve(-1);$('bNext').onclick=()=>mueve(1);
-$('bGuardar').onclick=guardarEnCal;$('bProgramar').onclick=programar;$('bPlan').onclick=plan;$('bSync').onclick=sincronizar;$('bProbar').onclick=probar;
+$('bFotoIA').onclick=fotoIA;$('bGuardar').onclick=guardarEnCal;$('bProgramar').onclick=programar;$('bPlan').onclick=plan;$('bSync').onclick=sincronizar;$('bProbar').onclick=probar;
 $('bExport').onclick=()=>baja(new Blob([JSON.stringify(cal,null,1)],{type:'application/json'}),'calendario-loquipapas.json');
 $('bVaciar').onclick=()=>{cal=cal.filter(e=>e.estado!=='borrador');guardaCal();$('calEstado').textContent='Borradores eliminados.'};
 {const d=new Date();d.setDate(d.getDate()+1);d.setHours(18,30,0,0);$('cuando').value=fechaLocal(d)}

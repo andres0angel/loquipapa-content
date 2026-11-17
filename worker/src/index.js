@@ -117,7 +117,7 @@ async function tokenTikTok(env) {
   const t = JSON.parse(raw);
   if (t.expira > Date.now() + 60000) return t.access_token;
   if (!t.refresh_token || !env.TIKTOK_CLIENT_KEY) return null;
-  const r = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+  const r = await fetch(`${env.TIKTOK_BASE || 'https://open.tiktokapis.com'}/v2/oauth/token/`, {
     method: 'POST',
     body: new URLSearchParams({ client_key: env.TIKTOK_CLIENT_KEY, client_secret: env.TIKTOK_CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: t.refresh_token }),
   });
@@ -130,7 +130,7 @@ async function pasoTikTok(env, post, st) {
   if (post.tipo !== 'reel') { st.estado = 'omitido'; st.error = 'A TikTok solo se envían videos'; return; }
   const token = await tokenTikTok(env);
   if (!token) throw new Error('TikTok no está conectado');
-  const r = await fetch('https://open.tiktokapis.com/v2/post/publish/video/init/', {
+  const r = await fetch(`${env.TIKTOK_BASE || 'https://open.tiktokapis.com'}/v2/post/publish/video/init/`, {
     method: 'POST',
     headers: { authorization: 'Bearer ' + token, 'content-type': 'application/json; charset=UTF-8' },
     body: JSON.stringify({
@@ -200,7 +200,7 @@ async function api(req, env, url) {
   // Recuerda la dirección pública para que la tarea programada arme los enlaces de los archivos.
   if ((await ajuste(env, 'origen')) !== url.origin) await ajuste(env, 'origen', url.origin);
 
-  if (p === '/api/status' && m === 'GET') return json({ ok: true, redes: await conectadas(env), almacen: env.MEDIA ? 'r2' : 'kv' });
+  if (p === '/api/status' && m === 'GET') return json({ ok: true, redes: await conectadas(env), almacen: env.MEDIA ? 'r2' : 'kv', ia: !!env.AI });
 
   if (p === '/api/media' && m === 'POST') {
     const type = (req.headers.get('content-type') || '').split(';')[0];
@@ -244,6 +244,38 @@ async function api(req, env, url) {
       if (fila.estado === 'publicado') return json({ error: 'Ya se publicó' }, 409);
       return json(await procesar(env, fila, url.origin));
     }
+  }
+
+  // IA gratuita de Cloudflare (Workers AI): textos e imágenes dentro de la cuota diaria sin costo.
+  if (p === '/api/ideas' && m === 'POST') {
+    if (!env.AI) return json({ error: 'La IA gratuita no está activada en el servidor' }, 501);
+    const b = await req.json().catch(() => ({}));
+    const r = await env.AI.run(env.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: String(b.sistema || '').slice(0, 2000) },
+        { role: 'user', content: String(b.pedido || '').slice(0, 1000) },
+      ],
+      max_tokens: 400,
+      temperature: 1,
+    });
+    const texto = r?.response ?? r?.choices?.[0]?.message?.content ?? '';
+    if (!texto) return json({ error: 'La IA no respondió. Puede haberse agotado la cuota gratuita de hoy.' }, 502);
+    return json({ texto });
+  }
+
+  if (p === '/api/imagen' && m === 'POST') {
+    if (!env.AI) return json({ error: 'La IA gratuita no está activada en el servidor' }, 501);
+    const b = await req.json().catch(() => ({}));
+    const r = await env.AI.run(env.AI_IMAGE_MODEL || '@cf/black-forest-labs/flux-1-schnell', { prompt: String(b.descripcion || '').slice(0, 1500), steps: 4 });
+    let b64 = typeof r?.image === 'string' ? r.image : null;
+    if (!b64 && r) {
+      const buf = new Uint8Array(await new Response(r).arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      b64 = btoa(bin);
+    }
+    if (!b64) return json({ error: 'La IA no devolvió imagen. Puede haberse agotado la cuota gratuita de hoy.' }, 502);
+    return json({ imagen: 'data:image/jpeg;base64,' + b64 });
   }
 
   if (p === '/api/tiktok/token' && m === 'POST') {

@@ -9,6 +9,10 @@ crons = ["*/5 * * * *"]
 GRAPH_VERSION = "v26.0"
 TIKTOK_PRIVACY = "SELF_ONLY"
 
+# IA gratuita de Cloudflare para textos e imágenes (cuota diaria sin costo).
+[ai]
+binding = "AI"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "loquipapas"
