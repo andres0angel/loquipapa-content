@@ -8,17 +8,15 @@ crons = ["*/5 * * * *"]
 [vars]
 GRAPH_VERSION = "v26.0"
 TIKTOK_PRIVACY = "SELF_ONLY"
-# Dirección pública de este Worker, sin barra final. Complétala después del primer despliegue.
-PUBLIC_URL = ""
 
 [[d1_databases]]
 binding = "DB"
 database_name = "loquipapas"
-database_id = "PEGA_AQUI_EL_ID_DE_D1"
+database_id = "fd12edc0-2be1-4128-b15e-e7c91690aba2"
 
 [[kv_namespaces]]
 binding = "MEDIA_KV"
-id = "PEGA_AQUI_EL_ID_DE_KV"
+id = "95a8b486891947a1b6b2c5760b77a043"
 
 # Opcional: usar R2 en vez de KV para archivos de más de 25 MB.
 # [[r2_buckets]]

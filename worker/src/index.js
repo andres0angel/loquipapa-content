@@ -144,6 +144,18 @@ async function pasoTikTok(env, post, st) {
   st.estado = 'publicado';
 }
 
+/* ---------- Tablas (se crean solas la primera vez) ---------- */
+let listo = false;
+async function preparar(env) {
+  if (listo) return;
+  await env.DB.batch([
+    env.DB.prepare("CREATE TABLE IF NOT EXISTS posts(id TEXT PRIMARY KEY, cuando INTEGER NOT NULL, tipo TEXT NOT NULL, caption TEXT, media TEXT NOT NULL, redes TEXT NOT NULL, estado TEXT NOT NULL DEFAULT 'programado', detalle TEXT NOT NULL DEFAULT '{}', creado INTEGER NOT NULL)"),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS posts_pendientes ON posts(estado, cuando)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS ajustes(clave TEXT PRIMARY KEY, valor TEXT NOT NULL)'),
+  ]);
+  listo = true;
+}
+
 /* ---------- Agenda ---------- */
 const conectadas = async (env) => ({
   ig: !!(env.IG_USER_ID && env.META_PAGE_TOKEN),
@@ -184,6 +196,9 @@ async function api(req, env, url) {
   const auth = req.headers.get('authorization') || '';
   if (!env.APP_TOKEN || auth !== 'Bearer ' + env.APP_TOKEN) return json({ error: 'Clave incorrecta' }, 401);
   const p = url.pathname, m = req.method;
+  await preparar(env);
+  // Recuerda la dirección pública para que la tarea programada arme los enlaces de los archivos.
+  if ((await ajuste(env, 'origen')) !== url.origin) await ajuste(env, 'origen', url.origin);
 
   if (p === '/api/status' && m === 'GET') return json({ ok: true, redes: await conectadas(env), almacen: env.MEDIA ? 'r2' : 'kv' });
 
@@ -255,7 +270,8 @@ export default {
 
   // Cada 5 minutos: publica lo que ya llegó a su hora y limpia archivos viejos.
   async scheduled(event, env) {
-    const origen = env.PUBLIC_URL;
+    await preparar(env);
+    const origen = env.PUBLIC_URL || (await ajuste(env, 'origen'));
     if (!origen) return;
     const ahora = Date.now();
     const due = await env.DB.prepare("SELECT * FROM posts WHERE estado IN ('programado','procesando') AND cuando<=? ORDER BY cuando LIMIT 5").bind(ahora).all();
