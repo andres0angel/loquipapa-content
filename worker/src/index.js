@@ -1,4 +1,4 @@
-// LOQUIPAPA · publicador
+// LOQUIPAPAS · publicador
 // Guarda las piezas, las programa y las publica en Instagram, Facebook y TikTok.
 // Corre en Cloudflare Workers (plan gratuito): D1 para la agenda, KV o R2 para los archivos.
 
@@ -247,7 +247,7 @@ export default {
     try {
       if (url.pathname.startsWith('/media/') && (req.method === 'GET' || req.method === 'HEAD')) return serveMedia(req, env, url.pathname.slice(7));
       if (url.pathname.startsWith('/api/')) return await api(req, env, url);
-      return new Response('LOQUIPAPA · publicador activo', { headers: CORS });
+      return new Response('LOQUIPAPAS · publicador activo', { headers: CORS });
     } catch (e) {
       return json({ error: String(e.message || e) }, 500);
     }

@@ -1,4 +1,4 @@
-name = "loquipapa-publicador"
+name = "loquipapas-publicador"
 main = "src/index.js"
 compatibility_date = "2026-01-01"
 
@@ -13,7 +13,7 @@ PUBLIC_URL = ""
 
 [[d1_databases]]
 binding = "DB"
-database_name = "loquipapa"
+database_name = "loquipapas"
 database_id = "PEGA_AQUI_EL_ID_DE_D1"
 
 [[kv_namespaces]]
@@ -23,4 +23,4 @@ id = "PEGA_AQUI_EL_ID_DE_KV"
 # Opcional: usar R2 en vez de KV para archivos de más de 25 MB.
 # [[r2_buckets]]
 # binding = "MEDIA"
-# bucket_name = "loquipapa-media"
+# bucket_name = "loquipapas-media"

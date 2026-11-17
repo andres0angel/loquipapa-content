@@ -1,10 +1,10 @@
-# LOQUIPAPA · generador y publicador de contenido
+# LOQUIPAPAS · generador y publicador de contenido
 
 Dos piezas que trabajan juntas:
 
 | Parte | Qué hace | Dónde corre | Costo |
 |---|---|---|---|
-| `index.html` | Crea reels, posts, carruseles, historias, guiones e ideas con la identidad de Loquipapa. Lleva el calendario. | En el navegador (Chrome de escritorio) | Gratis |
+| `index.html` | Crea reels, posts, carruseles, historias, guiones e ideas con la identidad de Loquipapas. Lleva el calendario. | En el navegador (Chrome de escritorio) | Gratis |
 | `worker/` | Guarda los archivos, los programa y los publica en Instagram, Facebook y TikTok a la hora elegida. | Cloudflare Workers | Plan gratuito |
 
 El generador funciona solo: se puede abrir con doble clic y descargar las piezas sin instalar nada. El publicador es opcional y solo hace falta para programar publicaciones automáticas.
@@ -25,7 +25,7 @@ npm install
 npx wrangler login
 
 # Base de datos y almacén de archivos
-npx wrangler d1 create loquipapa
+npx wrangler d1 create loquipapas
 npx wrangler kv namespace create MEDIA_KV
 ```
 
@@ -37,7 +37,7 @@ npx wrangler secret put APP_TOKEN   # inventa una clave larga; es la que escribe
 npm run deploy
 ```
 
-El despliegue muestra la dirección del servidor, parecida a `https://loquipapa-publicador.TU-USUARIO.workers.dev`. Cópiala en `PUBLIC_URL` dentro de `wrangler.toml` y ejecuta `npm run deploy` otra vez.
+El despliegue muestra la dirección del servidor, parecida a `https://loquipapas-publicador.TU-USUARIO.workers.dev`. Cópiala en `PUBLIC_URL` dentro de `wrangler.toml` y ejecuta `npm run deploy` otra vez.
 
 En el generador abre **Conexiones**, escribe esa dirección y la clave, y pulsa **Probar conexión**.
 
