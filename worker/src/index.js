@@ -250,16 +250,27 @@ async function api(req, env, url) {
   if (p === '/api/ideas' && m === 'POST') {
     if (!env.AI) return json({ error: 'La IA gratuita no está activada en el servidor' }, 501);
     const b = await req.json().catch(() => ({}));
-    const r = await env.AI.run(env.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: String(b.sistema || '').slice(0, 2000) },
-        { role: 'user', content: String(b.pedido || '').slice(0, 1000) },
-      ],
-      max_tokens: 400,
-      temperature: 1,
-    });
-    const texto = r?.response ?? r?.choices?.[0]?.message?.content ?? '';
-    if (!texto) return json({ error: 'La IA no respondió. Puede haberse agotado la cuota gratuita de hoy.' }, 502);
+    // Cloudflare retira modelos con el tiempo: se prueba una lista hasta que uno responda.
+    const modelos = [env.AI_MODEL, '@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-4-scout-17b-16e-instruct', '@cf/mistralai/mistral-small-3.1-24b-instruct'].filter(Boolean);
+    let texto = '', fallo = '';
+    for (const modelo of modelos) {
+      try {
+        const r = await env.AI.run(modelo, {
+          messages: [
+            { role: 'system', content: String(b.sistema || '').slice(0, 2000) },
+            { role: 'user', content: String(b.pedido || '').slice(0, 1000) },
+          ],
+          max_tokens: 400,
+          temperature: 1,
+        });
+        texto = r?.response ?? r?.choices?.[0]?.message?.content ?? '';
+        if (texto && typeof texto === 'object') texto = JSON.stringify(texto);
+        if (texto) break;
+      } catch (e) {
+        fallo = String(e.message || e).slice(0, 200);
+      }
+    }
+    if (!texto) return json({ error: 'La IA no respondió. ' + (fallo || 'Puede haberse agotado la cuota gratuita de hoy.') }, 502);
     return json({ texto });
   }
 
