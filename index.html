@@ -78,7 +78,7 @@ code{background:var(--noche);border:1px solid var(--linea);border-radius:6px;pad
       <option value="historia">Historia (imagen 9:16)</option>
       <option value="edicion">Editar mi grabación (video)</option>
       <option value="guion">Guion para grabar</option>
-      <option value="promptia">Personas hechas con IA (texto para el servicio)</option>
+      <option value="promptia">Personas hechas con IA (brief y prompts)</option>
       <option value="idea">Ideas de contenido</option>
     </select>
     <div class="row">
@@ -117,8 +117,8 @@ code{background:var(--noche);border:1px solid var(--linea);border-radius:6px;pad
     </select>
     <div id="fotoBox" class="oculto">
       <label for="foto">Tu foto o tu video</label>
-      <input type="file" id="foto" accept="image/*,video/*">
-      <p class="hint">Para el estilo humanista y para editar tu grabación. El archivo no sale de tu equipo.</p>
+      <input type="file" id="foto" accept="image/*,video/*" multiple>
+      <p class="hint">Para el estilo humanista y para editar tu grabación. Puedes elegir varios videos a la vez: se unen en orden por nombre (clip1, clip2, clip3). Los archivos no salen de tu equipo.</p>
       <div class="btns"><button class="sec" id="bFotoIA">Crear foto con IA gratis</button></div>
       <p class="hint">Usa la IA gratuita de tu servidor. La foto es inventada: revisa que se parezca a lo que vendes antes de publicarla.</p>
     </div>
@@ -518,12 +518,19 @@ function carrusel(d){const W=1080,H=1350,L=d.lineas.length?d.lineas:['PAPAS LOCA
  return{w:W,h:H,dur:0,slides,draw(t,i){slides[i||0]()}}}
 
 /* ---------- Edición de una grabación ---------- */
-function edicion(d){const v=media&&media.type==='video'?media.el:null;const clip=v?Math.min(v.duration||10,40):6;
- return{w:1080,h:1920,dur:clip+3.5,video:v,clip,draw(t){
-  if(t<clip){ctx.fillStyle=C.noche;ctx.fillRect(0,0,1080,1920);if(v)cover(v,1080,1920);else words({lines:['SUBE TU','VIDEO'],top:760,size:170,color:'#4A4160'});
-   const g=ctx.createLinearGradient(0,0,0,760);g.addColorStop(0,'rgba(27,23,38,.85)');g.addColorStop(1,'rgba(27,23,38,0)');ctx.fillStyle=g;ctx.fillRect(0,0,1080,760);
+function edicion(d){const vs=media&&media.type==='video'?(media.lista||[media.el]):[],segs=[];let acc=0;
+ vs.forEach(v=>{const du=Math.min(v.duration||8,20);if(acc+du<=60.5){segs.push([acc,du,v]);acc+=du}});const clip=acc||6;
+ return{w:1080,h:1920,dur:clip+3.5,video:vs[0]||null,videos:segs.map(x=>x[2]),clip,draw(t){
+  if(t<clip){ctx.fillStyle=C.noche;ctx.fillRect(0,0,1080,1920);
+   if(segs.length){let i=segs.findIndex(([st,du])=>t>=st&&t<st+du);if(i<0)i=segs.length-1;const [st,,cur]=segs[i];
+    segs.forEach(([, ,x],j)=>{if(j!==i&&!x.paused)x.pause()});if(cur.paused||Math.abs(cur.currentTime-(t-st))>.5){try{cur.currentTime=t-st}catch(e){}cur.play().catch(()=>{})}
+    cover(cur,1080,1920);
+    const g=ctx.createLinearGradient(0,0,0,760);g.addColorStop(0,'rgba(27,23,38,.85)');g.addColorStop(1,'rgba(27,23,38,0)');ctx.fillStyle=g;ctx.fillRect(0,0,1080,760);
+    if(i>0&&d.lineas[i-1]){const a=1-prog(t,st+2.2,.3),sc=slam(t,st+.1);if(a>0&&sc)words({lines:wrap(d.lineas[i-1],11),top:210,size:170,color:i%2?C.papa:C.crema,shadow:C.rojo,scale:sc,rot:i%2?2:-2,alpha:a})}}
+   else{words({lines:['SUBE TU','VIDEO'],top:760,size:170,color:'#4A4160'})}
    const a=1-prog(t,3,.3);if(a>0){const L=d.hookLines.slice(0,3),hs=fitSize(L,'Luckiest Guy',160,960);L.forEach((l,i)=>{const sc=slam(t,i*.35);if(sc)words({lines:[l],top:200+i*hs*1.08,size:hs,color:i===L.length-1&&L.length>1?C.papa:C.crema,shadow:C.rojo,scale:sc,rot:i%2?2:-2,alpha:a})})}
    const g2=ctx.createLinearGradient(0,1620,0,1920);g2.addColorStop(0,'rgba(27,23,38,0)');g2.addColorStop(1,'rgba(27,23,38,.85)');ctx.fillStyle=g2;ctx.fillRect(0,1620,1080,300);firma(1840,C.papa,C.rojo)}
+  else segs.forEach(([, ,x])=>{if(!x.paused)x.pause()});
   endCards(t,clip,d)}}}
 
 /* ---------- Textos: guion, ideas, descripción ---------- */
@@ -544,16 +551,116 @@ function guion(d){const p=d.producto.toLowerCase();const T={
  const tomas=T[d.campana]||T.antojo;
  return `GUION PARA GRABAR · ${$('campana').selectedOptions[0].text.toUpperCase()}\nProducto: ${d.producto}\nDuración: 12 a 15 segundos · Vertical (9:16)\n\nGANCHO (primeros 2 segundos)\n"${d.gancho}"\nDebe leerse en pantalla desde el primer cuadro.\n\nTOMAS\n`+tomas.map((x,i)=>`${i+1}. ${x[0]}\n   Qué se ve: ${x[1]}${x[2]?`\n   Texto en pantalla: ${x[2]}`:''}`).join('\n\n')+
  `\n\nSONIDO\nDeja el audio real de la cocina (fritura, crujido) y encima un audio en tendencia a volumen bajo.\n\nCÓMO GRABAR\n- Celular en vertical, apoyado, nunca en la mano para los detalles.\n- Luz de frente o de lado; nunca la lámpara encima del plato.\n- El queso y las papas se graban recién hechos: el vapor y el brillo duran menos de dos minutos.\n- Cámara lenta para el queso y la fritura.\n- Cada toma de 3 a 4 segundos; se corta al ritmo en la edición.\n\nDESPUÉS\nSube el video en "Editar mi grabación" para ponerle el gancho, la firma y el cierre de la marca.\n\nDESCRIPCIÓN PARA PUBLICAR\n${caption(d)}`}
-function promptIA(d){const p=d.producto.toLowerCase();const esc={antojo:`primer plano de una ${p} recién servida en una cajita roja, el queso derretido cae lentamente y se estira, sale vapor`,loqui:`una persona joven en una cocina de comidas rápidas muestra a cámara una ${p} cargada de queso y se ríe`,interaccion:`dos amigos jóvenes discuten divertidos frente a una ${p}, cada uno con un tarro de salsa distinto`,combo:`vista desde arriba de una mesa donde van entrando una ${p}, bebidas y salsas; dos personas comparten`,detras:`manos de un cocinero pelan, cortan y fríen papas frescas; luego bañan la ${p} con queso derretido`,cliente:`una persona joven prueba por primera vez una ${p} con mucho queso, cierra los ojos y sonríe sorprendida`,fecha:`un grupo de estudiantes celebra en la noche alrededor de una ${p} para compartir`}[d.campana];
- return `VIDEO CON PERSONAS HECHAS CON IA · TEXTO PARA PEGAR\n\nEsta app no genera personas con IA por sí sola: eso lo hace un servicio de video con IA de pago. Copia este texto en el servicio que elijas, descarga el clip y súbelo en "Editar mi grabación" para ponerle el gancho, la firma y el cierre.\n\nINDICACIÓN (español)\nVideo vertical 9:16, 8 segundos, realista, grabado como con celular en una cocina real de comidas rápidas en Medellín, Colombia. Escena: ${esc}. Luz cálida, colores vivos amarillo y rojo, cámara cercana con movimiento suave, cámara lenta en el queso. Personas jóvenes latinas, ropa casual, expresiones naturales. Sin texto en pantalla, sin logos, sin marcas de agua.\n\nINDICACIÓN (inglés, suele dar mejor resultado)\nVertical 9:16 video, 8 seconds, photorealistic, handheld phone look, real fast-food kitchen in Medellín, Colombia. Scene: ${esc}. Warm light, vivid yellow and red tones, close-up shots, gentle camera movement, slow motion on the melted cheese stretching. Young Latino people, casual clothes, natural expressions. No on-screen text, no logos, no watermarks.\n\nQUÉ EVITAR\n- Manos o dientes deformes: revisa el clip antes de publicar.\n- Platos que no vendes: la comida del video debe parecerse a la real.\n- Decir que son clientes reales: son escenas creadas con IA.\n\nTEXTOS PARA LA EDICIÓN\nGancho: ${d.gancho}\nRemate: ${d.remate}\nLlamado: ${d.cta}`}
+const PLATO_EN={'Salchipapa':'a generous portion of thick golden french fries loaded with sliced fried sausages, a heavy pour of melted yellow cheese and a zig-zag of pink sauce','Papas con queso':'a generous portion of thick golden french fries drowned in melted yellow cheddar cheese sauce','Perro':'a Colombian street-style hot dog overloaded with melted cheese, crushed potato chips and zig-zags of pink and garlic sauce','Perra':'a Colombian street-style hot dog overloaded with crispy bacon, melted cheese, crushed potato chips and zig-zag sauces','Hamburguesa':'a tall juicy cheeseburger with thick melted cheese dripping down the patty, fresh lettuce and tomato on a toasted bun'};
+const BRIEF={
+ antojo:{heroe:"a 23-year-old Colombian woman with long dark wavy hair in a high ponytail, light brown skin, wearing a plain cream sweatshirt",obj:'Provocar antojo inmediato y que el video se comparta con quien "debe la invitación".',gan:'Interrupción de patrón sensorial: el primer cuadro es comida en movimiento a pantalla completa, sin contexto. El cerebro se queda para entender qué está viendo.',met:'Retención a los 3 segundos, compartidos y guardados.',
+  clips:[['GANCHO','Extreme macro: the frame starts completely filled by thick melted yellow cheese pouring in slow motion. The camera pulls back fast to reveal PLATO, steaming, in a plain red paper box on a red tray.','Macro lens, fast pull-back from 5 cm to a 45-degree close-up, slow-motion feel.','Thick liquid pour, soft fryer sizzle in the background.'],
+   ['DESEO','A hand in a black food glove adds the last topping, then lifts one loaded bite toward the lens; the melted cheese stretches into a long elastic pull before it breaks.','45-degree close-up, slow push-in, focus follows the cheese pull.','Crunch of crispy food, faint kitchen ambience.'],
+   ['REMATE','A young woman takes the first bite, closes her eyes for a second, then looks straight at the camera and laughs while covering her mouth. A friend\'s hand sneaks into frame to steal a piece. Final second: she holds the red box toward the lens, centered and still.','Eye-level medium close-up, light handheld, the box ends sharp in the center of the frame.','Loud first-bite crunch, a short genuine laugh.']]},
+ loqui:{heroe:"a 26-year-old Colombian male cook with a short fade haircut and a thin mustache, medium brown skin, wearing a plain red apron over a black t-shirt and a plain yellow cap",obj:'Dar personalidad a la marca: que la gente asocie Loquipapas con actitud loca y divertida.',gan:'Golpe de acción en el primer cuadro (la caja cae frente al lente) más una mirada directa a cámara: el contacto visual frena el dedo.',met:'Retención a los 3 segundos y nuevos seguidores.',
+  clips:[['GANCHO','A young cook in a plain red apron and plain yellow cap slams a red paper box on the counter right in front of the lens; steam bursts up and he raises one eyebrow at the camera.','Low angle from the counter surface, wide lens very close to the box, tiny camera shake on impact.','Box hitting the counter, burst of sizzle.'],
+   ['DESEO','Quick whip-pan to two friends at the counter reacting with wide eyes and open mouths, pointing at the box, which holds PLATO.','Whip-pan into a medium two-shot, shallow depth of field.','A surprised "uff" reaction, kitchen ambience.'],
+   ['REMATE','The cook holds one golden fry like a microphone, grins and pulls a playful crazy face (one eye wide, tongue slightly out), then offers the open box to the camera with both hands. Final second: box centered and still.','Medium close-up at eye level, slow push-in to the box.','Light laugh, paper box rustle.']]},
+ interaccion:{heroe:"two friends: a 24-year-old Colombian man with short curly black hair in a plain cream hoodie (he holds the pink sauce), and a 23-year-old Colombian woman with straight shoulder-length dark hair in a plain denim jacket (she holds the white garlic sauce)",obj:'Generar comentarios: que la gente tome partido y etiquete a alguien.',gan:'Conflicto simple entre dos bandos. Una pregunta que se responde con una palabra baja la barrera para comentar.',met:'Comentarios y etiquetas por cada mil vistas.',
+  clips:[['GANCHO','Two friends sit side by side at a counter, each holding a different squeeze bottle (one pink sauce, one white garlic sauce), staring at each other dead serious like a western duel. Between them: PLATO.','Symmetrical frontal medium shot, slow push-in, both faces sharp.','Tense silence, one fryer sizzle.'],
+   ['DESEO','Each friend drizzles their own sauce over their half of the food with exaggerated confidence, then both turn to the camera defending their side with hand gestures.','Close-up on the food during the drizzle, tilt up to the faces.','Sauce bottle squeeze, playful arguing without clear words.'],
+   ['REMATE','Both push the red box toward the lens at the same time and point at the viewer, waiting for the answer with raised eyebrows. Final second: box centered and still.','Frontal medium shot, the box slides into close-up.','Box sliding on the counter.']]},
+ combo:{heroe:"three friends: a 24-year-old Colombian man with short curly black hair in a plain cream hoodie, a 23-year-old Colombian woman with straight shoulder-length dark hair in a plain denim jacket, and a 25-year-old Afro-Colombian man with a short beard in a plain black t-shirt",obj:'Vender el plan completo (comida para compartir), no un plato suelto.',gan:'Acumulación rítmica: la bandeja vacía se llena golpe a golpe. Cada elemento que cae renueva la atención.',met:'Clics al enlace o mensajes por WhatsApp.',
+  clips:[['GANCHO','Top-down view of an empty red tray on a cream paper sheet. In quick rhythmic drops, hands place: PLATO, two cold drinks with ice in plain cups, and two small sauce cups. Each item lands on a beat.','Perfect top-down shot, locked camera, items enter from the edges.','A distinct tap for every item landing.'],
+   ['DESEO','Two friends pick up loaded bites and clink them together like a toast; melted cheese stretches between the bites.','Side close-up at table height, shallow depth of field.','Soft laugh, crunch.'],
+   ['REMATE','Medium shot of the full table at night with soft city lights far behind; three friends laughing and sharing. One slides the tray toward the camera. Final second: tray centered and still.','Medium shot, slow push-in, warm practical lights.','Friends chatting indistinctly, tray sliding.']]},
+ detras:{heroe:"a 26-year-old Colombian male cook with a short fade haircut and a thin mustache, medium brown skin, wearing a plain red apron over a black t-shirt and a plain yellow cap",obj:'Demostrar frescura y cuidado: todo se hace el mismo día.',gan:'Proceso satisfactorio en primer plano (corte, aceite, vapor). El espectador se queda para ver el resultado final.',met:'Retención completa del video y guardados.',
+  clips:[['GANCHO','Macro of fresh peeled potatoes being cut into thick sticks on a wooden board; the knife hits the board and the cut pieces fall toward the lens.','Macro at board level, shallow focus, slow-motion feel.','Sharp knife on wood.'],
+   ['DESEO','A metal basket of raw fries is lowered into bubbling golden oil in slow motion, then lifted out golden and shaken, with steam rising.','Close-up at fryer level, slight tilt up following the basket.','Strong oil sizzle, basket shake.'],
+   ['REMATE','A cook in a plain red apron assembles PLATO in a red paper box, pours the melted cheese, and hands the box across the counter toward the camera with a proud nod. Final second: box centered and still.','Over-the-counter medium close-up, push-in to the box.','Cheese pour, paper rustle.']]},
+ cliente:{heroe:"a 24-year-old Colombian man with short curly black hair and light brown skin, wearing a plain cream hoodie",obj:'Prueba social: mostrar la reacción real que provoca la comida.',gan:'Anticipación de una reacción. La cara antes del primer bocado crea una pregunta que solo se responde viendo.',met:'Retención completa y compartidos.',
+  clips:[['GANCHO','From across the counter: a young man receives a red paper box holding PLATO, looks down at it and his eyebrows go up in surprise.','Eye-level medium close-up, slow push-in to the face.','Box placed on the counter, low ambience.'],
+   ['DESEO','Tight close-up of the first bite: he pauses, closes his eyes and nods slowly.','Tight close-up, very shallow depth of field.','Loud crunch, then a short silence.'],
+   ['REMATE','He points at the box without speaking, covers his mouth laughing and makes a chef\'s-kiss gesture; a friend reaches in to grab a piece. Final second: he turns the box toward the lens, centered and still.','Medium close-up, light handheld.','Short laugh.']]},
+ fecha:{heroe:"a 23-year-old Colombian woman with long dark wavy hair, light brown skin, wearing a plain cream sweatshirt and carrying a plain red umbrella",obj:'Unir la marca a un momento real de la semana (quincena, viernes, lluvia).',gan:'Identificación inmediata: una situación que el público está viviendo hoy. "Ese soy yo" detiene el desplazamiento.',met:'Compartidos y mensajes el mismo día.',
+  clips:[['GANCHO','A young woman on a sofa at night looks at heavy rain through the window, sighs bored, then suddenly smiles as she gets an idea.','Medium close-up from the side, rain reflections on her face, slow push-in.','Rain on glass.'],
+   ['DESEO','She walks into a small warm street-food spot shaking off a red umbrella; on the counter, PLATO is steaming in a red paper box.','Handheld follow shot from behind into the warm light, focus racks to the food.','Rain fading, fryer sizzle growing.'],
+   ['REMATE','She hugs the warm box with both hands, takes a bite and her face relaxes in relief; the rain is blurred behind her. Final second: she lifts the box toward the lens, centered and still.','Medium close-up, shallow depth of field, warm key light.','Crunch, soft rain.']]}
+};
+function promptIA(d){const B=BRIEF[d.campana]||BRIEF.antojo,plato=PLATO_EN[d.producto]||PLATO_EN.Salchipapa,camp=$('campana').selectedOptions[0].text;
+ const FORMATO='FORMAT: vertical 9:16 video, 8 seconds, 24 fps, photorealistic live-action commercial for social media, shot on a modern mirrorless camera with a fast prime lens, shallow depth of field, natural handheld micro-movement, crisp detail, true-to-life colors.';
+ const MARCA='BRAND WORLD: Loquipapas, a bold and playful Colombian street-food brand from Medellín (loaded fries, hot dogs, burgers). The brand palette must dominate every frame: salsa red (#E2412B), fries yellow (#FFC21A), warm cream (#FFF3D6) and deep night purple-black (#1B1726). Food is always served in a plain red paper box with one cream stripe, on red trays with cream paper. Staff wear plain red aprons and plain yellow caps. Mood: fun, loud, generous portions, late-evening street-food energy.';
+ const LUGAR='LOCATION: a small, spotless second-floor street-food spot in Medellín at dusk, open counter kitchen, warm practical bulbs, red and yellow accents on the walls, city lights softly out of focus in the background.';
+ const GENTE='CAST: young Colombian adults aged 20 to 28, varied skin tones, casual streetwear in neutral colors so the red and yellow of the brand stand out, genuine unposed expressions.';
+ const LUZ='LIGHT: warm key light from the side at about 3200 K, soft fill, glossy highlights on the cheese, visible steam backlit by a practical lamp, rich contrast, no flat lighting.';
+ const REGLAS='HARD RULES: absolutely no on-screen text, captions, subtitles, logos, watermarks, signs or brand names anywhere in the frame (titles are added later in editing). No other brands. Keep the top third of the frame visually calm and uncluttered for titles. Hands with five natural fingers, natural teeth, no distorted faces, no extra limbs. Food must look real and freshly made, not plastic. No music and no voice-over.';
+ const HEROE='MAIN CHARACTERS (keep them identical in every clip, same face, hair and clothes): '+B.heroe+'.';
+ const clip=(c)=>`${FORMATO}\n${MARCA}\n${LUGAR}\n${GENTE}\n${HEROE}\nSHOT: ${c[1].replace('PLATO',plato)}\nCAMERA: ${c[2]}\n${LUZ}\nAUDIO: natural sound only. ${c[3]}\n${REGLAS}`;
+ const uno=`${FORMATO}\n${MARCA}\n${LUGAR}\n${GENTE}\n${HEROE}\nSHOT LIST (one continuous 8-second piece with two fast cuts):\n0-2 s: ${B.clips[0][1].replace('PLATO',plato)}\n2-5 s: ${B.clips[1][1].replace('PLATO',plato)}\n5-8 s: ${B.clips[2][1].replace('PLATO',plato)}\nCAMERA: ${B.clips[0][2]} Then match the framing of each beat.\n${LUZ}\nAUDIO: natural sound only. ${B.clips[0][3]} ${B.clips[2][3]}\n${REGLAS}`;
+ const L=d.lineas;
+ return `VIDEO CON PERSONAS HECHAS CON IA · BRIEF PROFESIONAL
+Campaña: ${camp} · Producto: ${d.producto}
+
+1. ESTRATEGIA
+Objetivo: ${B.obj}
+Público: jóvenes y estudiantes de Medellín, 18 a 28 años, que deciden qué comer mirando el celular.
+Por qué funciona el gancho: ${B.gan}
+Estructura de retención (24 segundos en tres clips):
+- 0 a 8 s · GANCHO: frena el dedo. El texto "${d.gancho}" entra en el primer cuadro.
+- 8 a 16 s · DESEO: sube el antojo con el detalle más apetitoso.
+- 16 a 24 s · REMATE: emoción humana y la caja quieta al centro para el cierre de marca.
+- Cierre (lo pone la app): marca, "${d.remate}" y el llamado "${d.cta}".
+Qué medir: ${B.met}
+Regla de oro: debe entenderse sin sonido y enganchar aunque se vea solo el primer segundo.
+
+2. IDENTIDAD DE MARCA QUE EL VIDEO DEBE RESPETAR
+- Colores dominantes: rojo salsa #E2412B, amarillo papa #FFC21A, crema #FFF3D6 y noche #1B1726.
+- Empaque: caja de papel roja lisa con una franja crema. Bandejas rojas y papel crema.
+- Personal: delantal rojo liso y gorra amarilla lisa.
+- Tono: atrevido, divertido, porciones generosas, energía de comida callejera de noche.
+- Sin letras ni logos dentro del video: la IA los deforma. La app pone la firma LOQUIPAPAS, los títulos y el cierre.
+
+3. CÓMO USARLO
+1) Copia el PROMPT del clip 1 y pégalo en tu servicio de video con IA (por ejemplo, Gemini). Genera y descarga.
+2) Repite con los clips 2 y 3. Guarda los archivos como clip1, clip2 y clip3.
+3) En esta app elige "Editar mi grabación" y selecciona los tres archivos a la vez.
+4) La app los une en orden y agrega el gancho, los rótulos, la firma y el cierre. Descarga o programa.
+Si solo quieres generar un video, usa el PROMPT ÚNICO del punto 7.
+Si un clip sale mal, vuelve a generarlo con el mismo prompt: cada intento es distinto.
+Para que las personas se vean iguales en los tres clips, cada prompt ya describe a los mismos personajes. Si tu servicio permite subir una imagen de referencia, usa un cuadro del clip 1 en los clips 2 y 3.
+
+4. PROMPT · CLIP 1 · ${B.clips[0][0]} (copiar completo)
+${clip(B.clips[0])}
+
+5. PROMPT · CLIP 2 · ${B.clips[1][0]} (copiar completo)
+${clip(B.clips[1])}
+
+6. PROMPT · CLIP 3 · ${B.clips[2][0]} (copiar completo)
+${clip(B.clips[2])}
+
+7. PROMPT ÚNICO · TODO EN 8 SEGUNDOS (copiar completo)
+${uno}
+
+8. TEXTOS EN PANTALLA (los pone la app, no la IA)
+- Clip 1: ${d.gancho}
+- Clip 2: ${L[0]||'(primera línea del texto principal)'}
+- Clip 3: ${L[1]||'(segunda línea del texto principal)'}
+- Cierre: PAPAS LOCAS · ${d.remate} · ${d.cta}
+
+9. REVISIÓN ANTES DE PUBLICAR
+- Manos, dientes y caras sin deformaciones en todos los cuadros.
+- La comida se parece a la que vendes: mismo tipo de plato, misma caja roja.
+- No aparece ninguna letra, logo ni marca ajena.
+- El primer segundo ya muestra comida o acción, no una toma vacía.
+- Marca el video como "contenido generado con IA" al publicarlo; las redes lo piden.
+- No lo presentes como clientes reales ni como reseña: son escenas creadas.
+
+DESCRIPCIÓN PARA PUBLICAR
+${caption(d)}`}
 function ideas(d){const L=IDEAS[d.campana]||IDEAS.antojo;return `IDEAS · ${$('campana').selectedOptions[0].text.toUpperCase()}\n\n`+L.map((x,i)=>`${i+1}. ${x[0]}\n   Formato: ${x[1]}\n   Por qué funciona: ${x[2]}`).join('\n\n')+`\n\nGanchos para probar:\n`+BANCO[d.campana].ganchos.map(g=>'- '+g).join('\n')}
 
 /* ---------- Motor: vista previa, exportación ---------- */
-let escena=null,raf=0,t0=0,grabando=false,textoActual='',slideIdx=0;
+let escena=null,raf=0,t0=0,grabando=false,textoActual='',slideIdx=0,acVid=null;
 function pinta(t){ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.shadowColor='transparent';ctx.clearRect(0,0,cv.width,cv.height);escena.draw(t,slideIdx)}
-function bucle(now){if(!escena||!escena.dur)return;let t=(now-t0)/1000;if(t>=escena.dur){if(grabando){pinta(escena.dur-.01);return}t0=now;t=0;if(escena.video){escena.video.currentTime=0;escena.video.play().catch(()=>{})}}
+function bucle(now){if(!escena||!escena.dur)return;let t=(now-t0)/1000;if(t>=escena.dur){if(grabando){pinta(escena.dur-.01);return}t0=now;t=0;reiniciaVideos()}
  pinta(t);raf=requestAnimationFrame(bucle)}
-function arranca(){cancelAnimationFrame(raf);if(escena.video){escena.video.currentTime=0;escena.video.muted=!grabando;escena.video.play().catch(()=>{})}t0=performance.now();raf=requestAnimationFrame(bucle)}
+function reiniciaVideos(){(escena.videos||[]).forEach(v=>{v.pause();try{v.currentTime=0}catch(e){}v.muted=!grabando})}
+function arranca(){cancelAnimationFrame(raf);reiniciaVideos();t0=performance.now();raf=requestAnimationFrame(bucle)}
 function estado(s){$('estado').textContent=s}
 async function generar(){await document.fonts.ready;const d=datos(),p=$('pieza').value;cancelAnimationFrame(raf);textoActual='';
  $('caption').textContent=caption(d);
@@ -564,7 +671,7 @@ async function generar(){await document.fonts.ready;const d=datos(),p=$('pieza')
  else if(p==='carrusel'){escena=carrusel(d);$('slideN').textContent=`1 de ${escena.slides.length}`}
  else escena=still(d,p==='post'?1350:1920);
  cv.width=escena.w;cv.height=escena.h;$('bDescargar').disabled=false;$('bCopiar').disabled=false;
- if(escena.dur){arranca();estado(p==='reel'&&d.estilo==='humanista'?'Reel animado listo. Para personas reales usa "Guion para grabar" y luego "Editar mi grabación".':'Vista previa en bucle.')}else{pinta(0);estado(escena.slides?'Carrusel listo. Usa Anterior y Siguiente para verlo.':'Imagen lista.')}}
+ if(escena.dur){arranca();estado(p==='reel'&&d.estilo==='humanista'?'Reel animado listo. Para personas usa "Guion para grabar" o "Personas hechas con IA" y luego "Editar mi grabación".':'Vista previa en bucle.')}else{pinta(0);estado(escena.slides?'Carrusel listo. Usa Anterior y Siguiente para verlo.':'Imagen lista.')}}
 function baja(blob,nombre){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 function ritmo(ac,dest,dur){const out=ac.createGain();out.gain.value=.5;out.connect(dest);const t0=ac.currentTime+.05;
  for(let b=0;b<dur*2;b++){const t=t0+b*.5;const o=ac.createOscillator(),g=ac.createGain();o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(45,t+.18);g.gain.setValueAtTime(1,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.connect(g).connect(out);o.start(t);o.stop(t+.3);
@@ -576,12 +683,12 @@ async function grabarVideo(){
  if(!mime){estado('Este navegador no permite grabar video. Prueba con Chrome.');return null}
  estado('Grabando el video… deja esta pestaña abierta y visible.');
  const stream=cv.captureStream(30);let ac=null;
- try{ac=escena.video&&escena.video._ac||new (window.AudioContext||window.webkitAudioContext)();if(escena.video)escena.video._ac=ac;const dest=ac.createMediaStreamDestination();
-  if(escena.video){const v=escena.video;const src=v._src||(v._src=ac.createMediaElementSource(v));src.connect(dest)}else ritmo(ac,dest,escena.dur);
+ try{const conVideo=escena.videos&&escena.videos.length;ac=conVideo?(acVid||(acVid=new (window.AudioContext||window.webkitAudioContext)())):new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')await ac.resume();const dest=ac.createMediaStreamDestination();
+  if(conVideo)escena.videos.forEach(v=>{const src=v._src||(v._src=ac.createMediaElementSource(v));try{src.disconnect()}catch(e){}src.connect(dest)});else ritmo(ac,dest,escena.dur);
   dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr))}catch(e){}
  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8e6}),chunks=[];rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
  const fin=new Promise(r=>rec.onstop=r);grabando=true;rec.start();arranca();
- await esperar(escena.dur*1000+150);rec.stop();await fin;grabando=false;if(ac&&!escena.video)ac.close().catch(()=>{});
+ await esperar(escena.dur*1000+150);rec.stop();await fin;grabando=false;if(ac&&ac!==acVid)ac.close().catch(()=>{});
  arranca();const tipo=mime.split(';')[0];return{blob:new Blob(chunks,{type:tipo}),tipo,ext:tipo==='video/mp4'?'mp4':'webm'}}
 // Crea los archivos finales de la pieza que está en pantalla.
 async function archivos(img='image/png'){
@@ -682,9 +789,10 @@ function ver(id){['vCrear','vCal','vCon'].forEach(v=>$(v).classList.toggle('ocul
 
 /* ---------- Eventos ---------- */
 function ajustaUI(){const p=$('pieza').value,e=$('estilo').value;$('escenaBox').classList.toggle('oculto',p!=='reel');$('fotoBox').classList.toggle('oculto',!(p==='edicion'||(e==='humanista'&&(p==='post'||p==='historia'))))}
-$('foto').addEventListener('change',ev=>{const f=ev.target.files[0];if(!f)return;const url=URL.createObjectURL(f);
- if(f.type.startsWith('video')){const v=document.createElement('video');v.src=url;v.playsInline=true;v.muted=true;v.onloadeddata=()=>{media={type:'video',el:v};generar()};v.onerror=()=>estado('No se pudo abrir ese video.')}
- else{const im=new Image();im.onload=()=>{media={type:'image',el:im};generar()};im.onerror=()=>estado('No se pudo abrir esa imagen.');im.src=url}});
+$('foto').addEventListener('change',async ev=>{const fs=[...ev.target.files];if(!fs.length)return;const vids=fs.filter(f=>f.type.startsWith('video'));
+ if(vids.length){estado('Abriendo los videos…');try{const lista=await Promise.all(vids.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true})).map(f=>new Promise((ok,mal)=>{const v=document.createElement('video');v.src=URL.createObjectURL(f);v.playsInline=true;v.muted=true;v.preload='auto';v.onloadeddata=()=>ok(v);v.onerror=()=>mal(new Error(f.name))})));
+   media={type:'video',el:lista[0],lista};if($('pieza').value!=='edicion'){$('pieza').value='edicion';ajustaUI()}generar()}catch(e){estado('No se pudo abrir el video '+e.message+'.')}}
+ else{const im=new Image();im.onload=()=>{media={type:'image',el:im};generar()};im.onerror=()=>estado('No se pudo abrir esa imagen.');im.src=URL.createObjectURL(fs[0])}});
 ['pieza','estilo','campana','producto','escena'].forEach(id=>$(id).addEventListener('change',()=>{ajustaUI();if(id==='campana'||(id==='producto'&&['antojo','fecha'].includes($('campana').value)))sugerir();else generar()}));
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>ver(b.dataset.v));
 const mueve=n=>{if(!escena||!escena.slides)return;slideIdx=(slideIdx+n+escena.slides.length)%escena.slides.length;pinta(0);$('slideN').textContent=`${slideIdx+1} de ${escena.slides.length}`};
