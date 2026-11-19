@@ -1,0 +1,24 @@
+:root{
+  --lq-crema: #FFF3D6;
+  --lq-rojo: #E2412B;
+  --lq-noche: #1B1726;
+  --lq-papa: #FFC21A;
+  --lq-queso: #FFD84A;
+  --lq-papa-clara: #FFD54A;
+  --lq-papa-tostada: #F5B014;
+  --lq-boca: #7A1C22;
+  --lq-lengua: #FF5A7A;
+  --lq-lengua-linea: #D63A5E;
+  --lq-pan: #F2B04A;
+  --lq-pan-tostado: #E8A23D;
+  --lq-carne: #6B3A22;
+  --lq-lechuga: #7BC043;
+  --lq-salchicha: #C8553A;
+  --lq-salsa-rosada: #FF8FA3;
+  --lq-blanco: #FFFFFF;
+  --lq-fuente-titulos: "Luckiest Guy", sans-serif;
+  --lq-fuente-acento: "Permanent Marker", cursive;
+  --lq-fuente-texto: "Work Sans", system-ui, sans-serif;
+  --lq-sombra-dura: 0.045em 0.045em 0 var(--lq-noche);
+  --lq-contorno: 0.06em solid var(--lq-noche);
+}

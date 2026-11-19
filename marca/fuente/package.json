@@ -1,0 +1,14 @@
+{
+  "name": "loquipapas-marca",
+  "private": true,
+  "description": "Genera los archivos de identidad de Loquipapas",
+  "scripts": {
+    "todo": "python3 paso1.py && python3 paso2.py && python3 paso3.py && python3 paso4.py && node exportar.js && node exportar-animaciones.js"
+  },
+  "devDependencies": {
+    "@fontsource/luckiest-guy": "^5",
+    "@fontsource/permanent-marker": "^5",
+    "@fontsource/work-sans": "^5",
+    "playwright": "^1"
+  }
+}

@@ -1,0 +1,431 @@
+{
+ "principal": [
+  {
+   "id": "crema",
+   "nombre": "Crema",
+   "uso": "Fondo principal, empaques, respiro",
+   "hex": "#FFF3D6",
+   "rgb": [
+    255,
+    243,
+    214
+   ],
+   "cmyk_aprox": [
+    0,
+    5,
+    16,
+    0
+   ],
+   "hsl": [
+    42,
+    100,
+    92
+   ]
+  },
+  {
+   "id": "rojo",
+   "nombre": "Rojo salsa",
+   "uso": "Color de marca: letras del logo, llamados, cajas",
+   "hex": "#E2412B",
+   "rgb": [
+    226,
+    65,
+    43
+   ],
+   "cmyk_aprox": [
+    0,
+    71,
+    81,
+    11
+   ],
+   "hsl": [
+    7,
+    76,
+    53
+   ]
+  },
+  {
+   "id": "noche",
+   "nombre": "Noche",
+   "uso": "Contornos, sombras, texto, fondos nocturnos",
+   "hex": "#1B1726",
+   "rgb": [
+    27,
+    23,
+    38
+   ],
+   "cmyk_aprox": [
+    29,
+    39,
+    0,
+    85
+   ],
+   "hsl": [
+    256,
+    25,
+    12
+   ]
+  },
+  {
+   "id": "papa",
+   "nombre": "Papa",
+   "uso": "Energía: fondos de antojo, la piel de Loqui, acentos",
+   "hex": "#FFC21A",
+   "rgb": [
+    255,
+    194,
+    26
+   ],
+   "cmyk_aprox": [
+    0,
+    24,
+    90,
+    0
+   ],
+   "hsl": [
+    44,
+    100,
+    55
+   ]
+  },
+  {
+   "id": "queso",
+   "nombre": "Queso",
+   "uso": "El queso derretido y brillos",
+   "hex": "#FFD84A",
+   "rgb": [
+    255,
+    216,
+    74
+   ],
+   "cmyk_aprox": [
+    0,
+    15,
+    71,
+    0
+   ],
+   "hsl": [
+    47,
+    100,
+    65
+   ]
+  }
+ ],
+ "ilustracion": [
+  {
+   "id": "papa_clara",
+   "nombre": "Papa frita clara",
+   "hex": "#FFD54A",
+   "rgb": [
+    255,
+    213,
+    74
+   ],
+   "cmyk_aprox": [
+    0,
+    16,
+    71,
+    0
+   ]
+  },
+  {
+   "id": "papa_tostada",
+   "nombre": "Papa frita tostada",
+   "hex": "#F5B014",
+   "rgb": [
+    245,
+    176,
+    20
+   ],
+   "cmyk_aprox": [
+    0,
+    28,
+    92,
+    4
+   ]
+  },
+  {
+   "id": "boca",
+   "nombre": "Boca",
+   "hex": "#7A1C22",
+   "rgb": [
+    122,
+    28,
+    34
+   ],
+   "cmyk_aprox": [
+    0,
+    77,
+    72,
+    52
+   ]
+  },
+  {
+   "id": "lengua",
+   "nombre": "Lengua",
+   "hex": "#FF5A7A",
+   "rgb": [
+    255,
+    90,
+    122
+   ],
+   "cmyk_aprox": [
+    0,
+    65,
+    52,
+    0
+   ]
+  },
+  {
+   "id": "lengua_linea",
+   "nombre": "Línea de la lengua",
+   "hex": "#D63A5E",
+   "rgb": [
+    214,
+    58,
+    94
+   ],
+   "cmyk_aprox": [
+    0,
+    73,
+    56,
+    16
+   ]
+  },
+  {
+   "id": "pan",
+   "nombre": "Pan",
+   "hex": "#F2B04A",
+   "rgb": [
+    242,
+    176,
+    74
+   ],
+   "cmyk_aprox": [
+    0,
+    27,
+    69,
+    5
+   ]
+  },
+  {
+   "id": "pan_tostado",
+   "nombre": "Pan tostado",
+   "hex": "#E8A23D",
+   "rgb": [
+    232,
+    162,
+    61
+   ],
+   "cmyk_aprox": [
+    0,
+    30,
+    74,
+    9
+   ]
+  },
+  {
+   "id": "carne",
+   "nombre": "Carne",
+   "hex": "#6B3A22",
+   "rgb": [
+    107,
+    58,
+    34
+   ],
+   "cmyk_aprox": [
+    0,
+    46,
+    68,
+    58
+   ]
+  },
+  {
+   "id": "lechuga",
+   "nombre": "Lechuga",
+   "hex": "#7BC043",
+   "rgb": [
+    123,
+    192,
+    67
+   ],
+   "cmyk_aprox": [
+    36,
+    0,
+    65,
+    25
+   ]
+  },
+  {
+   "id": "salchicha",
+   "nombre": "Salchicha",
+   "hex": "#C8553A",
+   "rgb": [
+    200,
+    85,
+    58
+   ],
+   "cmyk_aprox": [
+    0,
+    58,
+    71,
+    22
+   ]
+  },
+  {
+   "id": "salsa_rosada",
+   "nombre": "Salsa rosada",
+   "hex": "#FF8FA3",
+   "rgb": [
+    255,
+    143,
+    163
+   ],
+   "cmyk_aprox": [
+    0,
+    44,
+    36,
+    0
+   ]
+  },
+  {
+   "id": "blanco",
+   "nombre": "Blanco",
+   "hex": "#FFFFFF",
+   "rgb": [
+    255,
+    255,
+    255
+   ],
+   "cmyk_aprox": [
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "contraste": [
+  {
+   "texto": "crema",
+   "fondo": "rojo",
+   "razon": 3.79,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "crema",
+   "fondo": "noche",
+   "razon": 15.91,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "crema",
+   "fondo": "papa",
+   "razon": 1.47,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "crema",
+   "fondo": "queso",
+   "razon": 1.26,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "rojo",
+   "fondo": "crema",
+   "razon": 3.79,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "rojo",
+   "fondo": "noche",
+   "razon": 4.2,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "rojo",
+   "fondo": "papa",
+   "razon": 2.58,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "rojo",
+   "fondo": "queso",
+   "razon": 3.02,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "noche",
+   "fondo": "crema",
+   "razon": 15.91,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "noche",
+   "fondo": "rojo",
+   "razon": 4.2,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "noche",
+   "fondo": "papa",
+   "razon": 10.85,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "noche",
+   "fondo": "queso",
+   "razon": 12.67,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "papa",
+   "fondo": "crema",
+   "razon": 1.47,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "papa",
+   "fondo": "rojo",
+   "razon": 2.58,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "papa",
+   "fondo": "noche",
+   "razon": 10.85,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "papa",
+   "fondo": "queso",
+   "razon": 1.17,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "queso",
+   "fondo": "crema",
+   "razon": 1.26,
+   "sirve_para": "no usar para texto"
+  },
+  {
+   "texto": "queso",
+   "fondo": "rojo",
+   "razon": 3.02,
+   "sirve_para": "solo títulos grandes"
+  },
+  {
+   "texto": "queso",
+   "fondo": "noche",
+   "razon": 12.67,
+   "sirve_para": "texto normal"
+  },
+  {
+   "texto": "queso",
+   "fondo": "papa",
+   "razon": 1.17,
+   "sirve_para": "no usar para texto"
+  }
+ ],
+ "nota": "Los valores CMYK son una conversión de referencia. Para impresión, pide prueba de color a la imprenta."
+}

@@ -7,6 +7,10 @@
 
 No hay pagos mensuales. Todo corre dentro de los cupos gratuitos de GitHub y Cloudflare.
 
+## Identidad de marca
+
+La carpeta [`marca/`](marca/) tiene el manual completo y todos los archivos de la marca: logo, Loqui, colores, tipografías, iconos, patrones, plantillas para imprimir y para redes, y animaciones. Manual en línea: https://andres0angel.github.io/loquipapa-content/marca/
+
 ## Estado actual
 
 - **Funcionando:** la app publicada, el servidor desplegado, la base de datos (D1 `loquipapas`), el almacén de archivos (KV `loquipapas-media`) y la tarea que revisa cada 5 minutos qué toca publicar.
